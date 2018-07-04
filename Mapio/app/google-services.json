@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "545144599903",
+    "firebase_url": "https://mapio-1530361767905.firebaseio.com",
+    "project_id": "mapio-1530361767905",
+    "storage_bucket": "mapio-1530361767905.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:545144599903:android:783fc35e2ca18a19",
+        "android_client_info": {
+          "package_name": "clbrain.mapio"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "545144599903-3olhcmegm640qdggi619gq2flddmfm1q.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "clbrain.mapio",
+            "certificate_hash": "8118d9d83b8c92f4cbefa5ab9485947c9de9113e"
+          }
+        },
+        {
+          "client_id": "545144599903-lpd0pd26tuvjnijj2ap9o00oatm9pe5u.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAdsJjLBS15cWwwj0JaLRaTC9b_LjnUpWk"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "545144599903-lpd0pd26tuvjnijj2ap9o00oatm9pe5u.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

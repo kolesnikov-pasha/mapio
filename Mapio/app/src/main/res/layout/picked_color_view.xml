@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    android:orientation="horizontal"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="26dp"
+    android:paddingLeft="5dp"
+    android:paddingRight="5dp"
+    android:background="@drawable/mini_fragments_background">
+
+    <include layout="@layout/color"
+        android:layout_height="20dp"
+        android:layout_width="20dp"
+        android:id="@+id/color"
+        android:layout_gravity="center"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Your color"
+        android:layout_gravity="center_vertical"/>
+
+</LinearLayout>
