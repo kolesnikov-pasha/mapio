@@ -66,11 +66,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 public void run() {
                     sendCoordinates();
                     getSquaresData();
-                    //init();
+                    init();
                 }
             });
         }
     }
+    private Timer mTimer;
     private Toast internetFailure = null;
     private List<SquaresData> squaresDataList = new ArrayList<>();
 
@@ -201,7 +202,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mapFragment.getMapAsync(this);
         // making requests
         getUserColor();
-        Timer mTimer = new Timer();
+        mTimer = new Timer();
         MyTimerTask timerTask = new MyTimerTask();
         mTimer.schedule(timerTask, 2000, 5000);
     }
@@ -255,13 +256,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         // Prompt the user for permission.
         getLocationPermission();
-
         // Turn on the My Location layer and the related control on the map.
         updateLocationUI();
         // Get the current location of the device and set the position of the map.
         getDeviceLocation();
         //Отрисовка
-        //init();
+        init();
 
     }
 
@@ -353,8 +353,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     .add(new LatLng(squaresDataList.get(i).getVertical_id() / 3600.0, squaresDataList.get(i).getHorizontal_id() / 2400.0 + deltaLongitude))
                     .add(new LatLng(squaresDataList.get(i).getVertical_id() / 3600.0 + deltaLatitude,squaresDataList.get(i).getHorizontal_id() / 2400.0 + deltaLongitude))
                     .strokeColor(Color.argb(100, 0, 0, 0)).strokeWidth(2)
-                    .fillColor(color));
-            mMap.addMarker(new MarkerOptions().position(new LatLng(squaresDataList.get(i).getVertical_id() / 3600.0, squaresDataList.get(i).getHorizontal_id() / 2400.0)));
+                    .fillColor(Color.parseColor(squaresDataList.get(i).getColor())));
             mMap.addPolygon(polygonOptions.get(polygonsCount));
             polygonsCount++;
         }
@@ -381,5 +380,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         } catch (SecurityException e)  {
             Log.e("Exception: %s", e.getMessage());
         }
+    }
+
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mTimer.cancel();
     }
 }
