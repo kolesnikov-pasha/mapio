@@ -66,11 +66,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 public void run() {
                     sendCoordinates();
                     getSquaresData();
-                    //init();
+                    init();
                 }
             });
         }
     }
+    private Timer mTimer;
     private Toast internetFailure = null;
     private List<SquaresData> squaresDataList = new ArrayList<>();
 
@@ -201,7 +202,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mapFragment.getMapAsync(this);
         // making requests
         getUserColor();
-        Timer mTimer = new Timer();
+        mTimer = new Timer();
         MyTimerTask timerTask = new MyTimerTask();
         mTimer.schedule(timerTask, 2000, 5000);
     }
@@ -254,13 +255,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         // Prompt the user for permission.
         getLocationPermission();
-
         // Turn on the My Location layer and the related control on the map.
         updateLocationUI();
         // Get the current location of the device and set the position of the map.
         getDeviceLocation();
         //Отрисовка
-        //init();
+        init();
 
     }
 
@@ -380,5 +380,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         } catch (SecurityException e)  {
             Log.e("Exception: %s", e.getMessage());
         }
+    }
+
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mTimer.cancel();
     }
 }
