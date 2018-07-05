@@ -225,6 +225,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mMap = map;
         // Use a custom info window adapter to handle multiple lines of text in the
         // info window contents.
+        mMap.setMaxZoomPreference(8);
 
         mMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
             @Override
