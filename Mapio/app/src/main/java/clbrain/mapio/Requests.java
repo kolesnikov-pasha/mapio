@@ -14,6 +14,63 @@ import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.Query;
 
+class User{
+    String user_id;
+
+    public User(String user_id) {
+        this.user_id = user_id;
+    }
+
+    public User() {
+    }
+
+    public String getUser_id() {
+        return user_id;
+    }
+
+    public void setUser_id(String user_id) {
+        this.user_id = user_id;
+    }
+}
+
+class StringStatus{
+    String status;
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public StringStatus(String status) {
+        this.status = status;
+    }
+    public StringStatus() {
+
+    }
+}
+
+class SquaresDataList{
+    List<SquaresData> squares;
+
+    public List<SquaresData> getSquares() {
+        return squares;
+    }
+
+    public void setSquares(List<SquaresData> squares) {
+        this.squares = squares;
+    }
+
+    public SquaresDataList(List<SquaresData> squares) {
+        this.squares = squares;
+    }
+
+    public SquaresDataList() {
+    }
+}
+
 class SendCoordinates{
     String user_id;
     Double latitude;
@@ -140,27 +197,49 @@ class SquaresData{
     }
 }
 
+class Score {
+    Integer user_score;
+
+    public Score(Integer user_score) {
+        this.user_score = user_score;
+    }
+
+    public Score() {
+    }
+
+    public Integer getUser_score() {
+        return user_score;
+    }
+
+    public void setUser_score(Integer user_score) {
+        this.user_score = user_score;
+    }
+}
+
 interface APIServices{
-    //@GET("get_scoreboard")
-    //Call<List<String>> getDashList();
     @GET("get_user_score")
-    Call<Integer> getUserScore(String uid);
+    Call<Score> getUserScore(@Query("user_id") String uid);
+
     @GET("get_user_color")
     Call<Color> getUserColor(@Query("user_id") String uid);
-    @POST("add_user")
-    Call<String> sendUID(@Body String user_id);
+
+    @POST("add_user/")
+    Call<Color> sendUID(@Body User user);
+
     @POST("send_user_coordinates")
-    Call<String> sendCoordinates(@Body SendCoordinates sendCoordinates);
+    Call<StringStatus> sendCoordinates(@Body SendCoordinates sendCoordinates);
+
     @GET("get_squares_data")
-    Call<List<SquaresData>> getSquaresData();
+    Call<SquaresDataList> getSquaresData();
 }
 
 public class Requests {
 
-    private String BASE_URL = "http://10.79.10.64:8000/";
+    private static final String BASE_URL = "http://10.79.10.101:8000/";
 
-    private Retrofit retrofit = new Retrofit.Builder().baseUrl(BASE_URL)
+    private static final Retrofit retrofit = new Retrofit.Builder().baseUrl(BASE_URL)
             .addConverterFactory(GsonConverterFactory.create()).build();
+    public static final APIServices apiServices = retrofit.create(APIServices.class);
 
-    public APIServices apiServices = retrofit.create(APIServices.class);
+    Requests() {}
 }

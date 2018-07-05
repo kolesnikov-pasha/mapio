@@ -1,7 +1,6 @@
 package clbrain.mapio;
 
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
@@ -9,14 +8,10 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.annotation.RestrictTo;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.TextView;
@@ -26,55 +21,54 @@ import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.places.GeoDataClient;
 import com.google.android.gms.location.places.PlaceDetectionClient;
-import com.google.android.gms.location.places.PlaceLikelihood;
-import com.google.android.gms.location.places.PlaceLikelihoodBufferResponse;
 import com.google.android.gms.location.places.Places;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolygonOptions;
-import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-import static android.widget.Toast.LENGTH_SHORT;
-
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
 
-    public static final double stlat = 48.01, stlong = 11.32;
-    public Toast internetFailure = null;
-    private static final String TAG = MainActivity.class.getSimpleName();
+
     private GoogleMap mMap;
-    private CameraPosition mCameraPosition;
     private int polygonsCount = 0;
-    private double latt, longg;
     private int color;
 
     //firebase reference
     FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
 
     //for requests
-    Requests makeRequest = new Requests();
-
-    // The entry points to the Places API.
-    private GeoDataClient mGeoDataClient;
-    private PlaceDetectionClient mPlaceDetectionClient;
+    class MyTimerTask extends TimerTask {
+        @Override
+        public void run() {
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    sendCoordinates();
+                    getSquaresData();
+                    init();
+                }
+            });
+        }
+    }
+    private Toast internetFailure = null;
+    private ArrayList<SquaresData> squaresDataList = new ArrayList<>();
 
     // The entry point to the Fused Location Provider.
     private FusedLocationProviderClient mFusedLocationProviderClient;
@@ -93,25 +87,60 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     // Keys for storing activity state.
     private static final String KEY_CAMERA_POSITION = "camera_position";
     private static final String KEY_LOCATION = "location";
-    private ArrayList<SquaresData> squaresDataList = null;
 
     //For drawing polylines at the map
     SupportMapFragment mapFragment;
 
-    private void getSquaresData(){
-        Call<List<SquaresData>> call = makeRequest.apiServices.getSquaresData();
-        call.enqueue(new Callback<List<SquaresData>>() {
+    private void sendCoordinates(){
+        LocationManager locationManager = (LocationManager)
+                getSystemService(Context.LOCATION_SERVICE);
+        LocationListener locationListener = new MyLocationListener();
+        if (ActivityCompat.checkSelfPermission(this,
+                android.Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(this,
+                android.Manifest.permission.ACCESS_COARSE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        assert locationManager != null;
+        locationManager.requestLocationUpdates(
+                LocationManager.GPS_PROVIDER, 5000, 10, locationListener);
+        Double latitude = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER).getLatitude();
+        Double longitude = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER).getLongitude();
+        Requests.apiServices.sendCoordinates(new SendCoordinates(user.getUid(), latitude, longitude)).enqueue(new Callback<StringStatus>() {
             @Override
-            public void onResponse(Call<List<SquaresData>> call, Response<List<SquaresData>> response) {
+            public void onResponse(@NonNull Call<StringStatus> call, @NonNull Response<StringStatus> response) {
+                if (response.isSuccessful()) {
+                    Log.i("COORD_SEND", response.body().getStatus());
+                }
+                else {
+                    internetFailure.show();
+                }
+            }
+
+            @Override
+            public void onFailure(@NonNull Call<StringStatus> call, @NonNull Throwable t) {
+                internetFailure.show();
+            }
+        });
+    }
+
+    private void getSquaresData(){
+        Call<SquaresDataList> call = Requests.apiServices.getSquaresData();
+        call.enqueue(new Callback<SquaresDataList>() {
+            @Override
+            public void onResponse(@NonNull Call<SquaresDataList> call, @NonNull Response<SquaresDataList> response) {
                 if (response.isSuccessful()){
-                    squaresDataList = (ArrayList<SquaresData>) response.body();
+                    assert response.body() != null;
+                    squaresDataList = (ArrayList<SquaresData>) response.body().getSquares();
                 }
                 else{
                     internetFailure.show();
                 }
             }
             @Override
-            public void onFailure(Call<List<SquaresData>> call, Throwable t) {
+            public void onFailure(@NonNull Call<SquaresDataList> call, @NonNull Throwable t) {
                 t.printStackTrace();
             }
         });
@@ -119,11 +148,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private void getUserColor(){
         String uid = user.getUid();
-        Call<clbrain.mapio.Color> call = makeRequest.apiServices.getUserColor(uid);
+        Call<clbrain.mapio.Color> call = Requests.apiServices.getUserColor(uid);
         call.enqueue(new Callback<clbrain.mapio.Color>() {
             @Override
-            public void onResponse(Call<clbrain.mapio.Color> call, Response<clbrain.mapio.Color> response) {
+            public void onResponse(@NonNull Call<clbrain.mapio.Color> call,
+                                   @NonNull Response<clbrain.mapio.Color> response) {
                 if (response.isSuccessful()){
+                    assert response.body() != null;
                     color = Color.parseColor(response.body().getUser_color());
                     findViewById(R.id.picked_color_view).findViewById(R.id.color).setBackgroundColor(color);
                     Log.e("COLOR",  color + "");
@@ -133,7 +164,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 }
             }
             @Override
-            public void onFailure(Call<clbrain.mapio.Color> call, Throwable t) {
+            public void onFailure(@NonNull Call<clbrain.mapio.Color> call, @NonNull Throwable t) {
                 t.printStackTrace();
             }
         });
@@ -142,20 +173,19 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         // Retrieve location and camera position from saved instance state.
         if (savedInstanceState != null) {
             mLastKnownLocation = savedInstanceState.getParcelable(KEY_LOCATION);
-            mCameraPosition = savedInstanceState.getParcelable(KEY_CAMERA_POSITION);
+            CameraPosition mCameraPosition = savedInstanceState.getParcelable(KEY_CAMERA_POSITION);
         }
         internetFailure = Toast.makeText(getApplicationContext(), "Check your internet connection", Toast.LENGTH_SHORT);
         // Retrieve the content view that renders the map.
-        setContentView(R.layout.activity_maps);
-        // Construct a GeoDataClient.
-        mGeoDataClient = Places.getGeoDataClient(this, null);
-        getUserColor();
+        setContentView(R.layout.activity_main);
+        // Construct a GeoDataClient
+        GeoDataClient mGeoDataClient = Places.getGeoDataClient(this, null);
+
         // Construct a PlaceDetectionClient.
-        mPlaceDetectionClient = Places.getPlaceDetectionClient(this, null);
+        PlaceDetectionClient mPlaceDetectionClient = Places.getPlaceDetectionClient(this, null);
 
         // Construct a FusedLocationProviderClient.
         mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
@@ -163,9 +193,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // Build the map.
         mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
+        assert mapFragment != null;
         mapFragment.getMapAsync(this);
+        // making requests
+        getUserColor();
+        Timer mTimer = new Timer();
+        MyTimerTask timerTask = new MyTimerTask();
+        mTimer.schedule(timerTask, 2000, 5000);
     }
-
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
@@ -174,18 +209,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             outState.putParcelable(KEY_LOCATION, mLastKnownLocation);
             super.onSaveInstanceState(outState);
         }
-    }
-
-    /**
-     * Sets up the options menu.
-     * @param menu The options menu.
-     * @return Boolean.
-     */
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.current_place_menu, menu);
-        return true;
     }
 
     /**
@@ -211,10 +234,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 View infoWindow = getLayoutInflater().inflate(R.layout.custom_info_contents,
                         (FrameLayout) findViewById(R.id.map), false);
 
-                TextView title = ((TextView) infoWindow.findViewById(R.id.title));
+                TextView title = infoWindow.findViewById(R.id.title);
                 title.setText(marker.getTitle());
 
-                TextView snippet = ((TextView) infoWindow.findViewById(R.id.snippet));
+                TextView snippet =  infoWindow.findViewById(R.id.snippet);
                 snippet.setText(marker.getSnippet());
 
                 return infoWindow;
@@ -251,8 +274,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                                     new LatLng(mLastKnownLocation.getLatitude(),
                                             mLastKnownLocation.getLongitude()), DEFAULT_ZOOM));
                         } else {
-                            Log.d(TAG, "Current location is null. Using defaults.");
-                            Log.e(TAG, "Exception: %s", task.getException());
+                            Log.d("LOC", "Current location is null. Using defaults.");
+                            Log.e("LOC", "Exception: %s", task.getException());
                             mMap.moveCamera(CameraUpdateFactory
                                     .newLatLngZoom(mDefaultLocation, DEFAULT_ZOOM));
                             mMap.getUiSettings().setMyLocationButtonEnabled(false);
@@ -265,12 +288,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-
-    /**
-     * Prompts the user for permission to use the device location.
-     */
     private void getLocationPermission() {
-
         if (ContextCompat.checkSelfPermission(this.getApplicationContext(),
                 android.Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
@@ -302,49 +320,33 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
     private void init() {
-        /*PolylineOptions polylineOptions = new PolylineOptions()
-                .add(new LatLng(-5, -30)).add(new LatLng(-5, -31))
-                .add(new LatLng(5, -31)).add(new LatLng(5, -30))
-                .color(Color.MAGENTA).width(1);
-
-        mMap.addPolyline(polylineOptions);*/
         LocationManager locationManager = (LocationManager)
                 getSystemService(Context.LOCATION_SERVICE);
         LocationListener locationListener = new MyLocationListener();
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
+        if (ActivityCompat.checkSelfPermission(this,
+                android.Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(this,
+                android.Manifest.permission.ACCESS_COARSE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED)
+        {
             return;
         }
+        assert locationManager != null;
         locationManager.requestLocationUpdates(
-                LocationManager.GPS_PROVIDER, 5000, 10, locationListener);
-        double delat = (double) 1 / 3600, delong = (double) 1 / 2400;//Дельта для формироваия квадратиков
-        //double stlat1 = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER).getLatitude();//сейчас усьтанавливается исходя из местоположения, когда будет готов API надо будет ставить то,
-        //double stlong1 = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER).getLongitude();//что присылает Антон(координты ближайшего узла)
-        //Log.e("COORD", stlat1 + " " + stlong1);
-        Toast.makeText(this, Double.toString(stlat), Toast.LENGTH_SHORT).show();
-        Toast.makeText(this, Double.toString(stlong), Toast.LENGTH_SHORT).show();
-        mMap.addMarker(new MarkerOptions().position(new LatLng(stlat, stlong)).icon(
-                BitmapDescriptorFactory
-                        .defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA)));
+                LocationManager.GPS_PROVIDER, 2000, 5, locationListener);
+        double deltaLatitude = 1.0 / 3600, deltaLongitude = 1.0 / 2400;//Дельта для формироваия квадратиков
         ArrayList<PolygonOptions> polygonOptions = new ArrayList<>();
-        if (squaresDataList != null ) {
-            for (int i = 0; i < squaresDataList.size(); i++) {
-                polygonOptions.add(polygonsCount, new PolygonOptions()
-                        .add(new LatLng(stlat + delat * squaresDataList.get(i).getVertical_id() + delat, stlong + delong * squaresDataList.get(i).getHorizontal_id()))
-                        .add(new LatLng(stlat + delat * squaresDataList.get(i).getVertical_id(), stlong + delong * squaresDataList.get(i).getHorizontal_id()))
-                        .add(new LatLng(stlat + delat * squaresDataList.get(i).getVertical_id(), stlong + delong * squaresDataList.get(i).getHorizontal_id() + delong))
-                        .add(new LatLng(stlat + delat * squaresDataList.get(i).getVertical_id() + delat, stlong + delong * squaresDataList.get(i).getHorizontal_id() + delong))
-                        .strokeColor(Color.argb(100, 0, 0, 0)).strokeWidth(2)
-                        .fillColor(Color.argb(100, 12, 240, 54)));
-                mMap.addPolygon(polygonOptions.get(polygonsCount));
-                polygonsCount++;
-            }
+        for (int i = 0; i < squaresDataList.size(); i++) {
+            polygonOptions.add(polygonsCount, new PolygonOptions()
+                    .add(new LatLng(squaresDataList.get(i).getVertical_id() / 3600.0 + deltaLatitude, squaresDataList.get(i).getHorizontal_id() / 2400.0))
+                    .add(new LatLng(squaresDataList.get(i).getVertical_id() / 3600.0,squaresDataList.get(i).getHorizontal_id() / 2400.0))
+                    .add(new LatLng(squaresDataList.get(i).getVertical_id() / 3600.0, squaresDataList.get(i).getHorizontal_id() / 2400.0 + deltaLongitude))
+                    .add(new LatLng(squaresDataList.get(i).getVertical_id() / 3600.0 + deltaLatitude,squaresDataList.get(i).getHorizontal_id() / 2400.0 + deltaLongitude))
+                    .strokeColor(Color.argb(100, 0, 0, 0)).strokeWidth(2)
+                    .fillColor(Color.argb(100, 12, 240, 54)));
+            mMap.addPolygon(polygonOptions.get(polygonsCount));
+            polygonsCount++;
         }
     }
 
