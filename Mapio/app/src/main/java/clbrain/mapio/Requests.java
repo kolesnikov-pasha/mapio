@@ -3,6 +3,7 @@ package clbrain.mapio;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,21 +53,21 @@ class StringStatus{
     }
 }
 
-class SquaresDataList{
-    SquaresData[] squares;
+class SquaresDataList implements Serializable{
+    @SerializedName("squares")
+    List<SquaresData> squares;
 
-    public SquaresData[] getSquares() {
+    public List<SquaresData> getSquares() {
         return squares;
     }
 
-    public void setSquares(SquaresData[] squares) {
+    public void setSquares(List<SquaresData> squares) {
         this.squares = squares;
     }
 
-    public SquaresDataList(SquaresData[] squares) {
+    public SquaresDataList(List<SquaresData> squares) {
         this.squares = squares;
     }
-
     public SquaresDataList() {
     }
 }

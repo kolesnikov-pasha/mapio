@@ -29,6 +29,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -36,6 +37,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -49,6 +51,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private GoogleMap mMap;
     private int polygonsCount = 0;
     private int color;
+    ArrayList<PolygonOptions> polygonOptions = new ArrayList<>();
 
     //firebase reference
     FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
@@ -68,7 +71,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
     private Toast internetFailure = null;
-    private SquaresData[] squaresDataList;
+    private List<SquaresData> squaresDataList = new ArrayList<>();
 
     // The entry point to the Fused Location Provider.
     private FusedLocationProviderClient mFusedLocationProviderClient;
@@ -132,7 +135,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public void onResponse(@NonNull Call<SquaresDataList> call, @NonNull Response<SquaresDataList> response) {
                 if (response.isSuccessful()){
-                    squaresDataList = (SquaresData[]) response.body().getSquares();
+                    Log.i("SQUARES", response.body().getSquares().toString() + " ");
+                    squaresDataList = (ArrayList<SquaresData>) response.body().getSquares();
                 }
                 else{
                     internetFailure.show();
@@ -335,15 +339,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         locationManager.requestLocationUpdates(
                 LocationManager.GPS_PROVIDER, 2000, 5, locationListener);
         double deltaLatitude = 1.0 / 3600, deltaLongitude = 1.0 / 2400;//Дельта для формироваия квадратиков
-        ArrayList<PolygonOptions> polygonOptions = new ArrayList<>();
-        for (int i = 0; i < squaresDataList.length; i++) {
+        for (int i = 0; i < squaresDataList.size(); i++) {
             polygonOptions.add(new PolygonOptions()
-                    .add(new LatLng(squaresDataList[i].getVertical_id() / 3600.0 + deltaLatitude, squaresDataList[i].getHorizontal_id() / 2400.0))
-                    .add(new LatLng(squaresDataList[i].getVertical_id() / 3600.0,squaresDataList[i].getHorizontal_id() / 2400.0))
-                    .add(new LatLng(squaresDataList[i].getVertical_id() / 3600.0, squaresDataList[i].getHorizontal_id() / 2400.0 + deltaLongitude))
-                    .add(new LatLng(squaresDataList[i].getVertical_id() / 3600.0 + deltaLatitude,squaresDataList[i].getHorizontal_id() / 2400.0 + deltaLongitude))
+                    .add(new LatLng(squaresDataList.get(i).getVertical_id() / 3600.0 + deltaLatitude, squaresDataList.get(i).getHorizontal_id() / 2400.0))
+                    .add(new LatLng(squaresDataList.get(i).getVertical_id() / 3600.0,squaresDataList.get(i).getHorizontal_id() / 2400.0))
+                    .add(new LatLng(squaresDataList.get(i).getVertical_id() / 3600.0, squaresDataList.get(i).getHorizontal_id() / 2400.0 + deltaLongitude))
+                    .add(new LatLng(squaresDataList.get(i).getVertical_id() / 3600.0 + deltaLatitude,squaresDataList.get(i).getHorizontal_id() / 2400.0 + deltaLongitude))
                     .strokeColor(Color.argb(100, 0, 0, 0)).strokeWidth(2)
                     .fillColor(color));
+            mMap.addMarker(new MarkerOptions().position(new LatLng(squaresDataList.get(i).getVertical_id() / 3600.0, squaresDataList.get(i).getHorizontal_id() / 2400.0)));
             mMap.addPolygon(polygonOptions.get(polygonsCount));
             polygonsCount++;
         }
