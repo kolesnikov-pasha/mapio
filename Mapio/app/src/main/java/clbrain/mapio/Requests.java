@@ -53,17 +53,17 @@ class StringStatus{
 }
 
 class SquaresDataList{
-    List<SquaresData> squares;
+    SquaresData[] squares;
 
-    public List<SquaresData> getSquares() {
+    public SquaresData[] getSquares() {
         return squares;
     }
 
-    public void setSquares(List<SquaresData> squares) {
+    public void setSquares(SquaresData[] squares) {
         this.squares = squares;
     }
 
-    public SquaresDataList(List<SquaresData> squares) {
+    public SquaresDataList(SquaresData[] squares) {
         this.squares = squares;
     }
 
@@ -217,25 +217,25 @@ class Score {
 }
 
 interface APIServices{
-    @GET("get_user_score")
+    @GET("get_user_score/")
     Call<Score> getUserScore(@Query("user_id") String uid);
 
-    @GET("get_user_color")
+    @GET("get_user_color/")
     Call<Color> getUserColor(@Query("user_id") String uid);
 
     @POST("add_user/")
     Call<Color> sendUID(@Body User user);
 
-    @POST("send_user_coordinates")
+    @POST("send_user_coordinates/")
     Call<StringStatus> sendCoordinates(@Body SendCoordinates sendCoordinates);
 
-    @GET("get_squares_data")
+    @GET("get_squares_data/")
     Call<SquaresDataList> getSquaresData();
 }
 
 public class Requests {
 
-    private static final String BASE_URL = "http://10.79.10.101:8000/";
+    private static final String BASE_URL = "http://10.79.10.64:8000/";
 
     private static final Retrofit retrofit = new Retrofit.Builder().baseUrl(BASE_URL)
             .addConverterFactory(GsonConverterFactory.create()).build();

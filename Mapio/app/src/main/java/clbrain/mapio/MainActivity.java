@@ -68,7 +68,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
     private Toast internetFailure = null;
-    private ArrayList<SquaresData> squaresDataList = new ArrayList<>();
+    private SquaresData[] squaresDataList;
 
     // The entry point to the Fused Location Provider.
     private FusedLocationProviderClient mFusedLocationProviderClient;
@@ -132,8 +132,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public void onResponse(@NonNull Call<SquaresDataList> call, @NonNull Response<SquaresDataList> response) {
                 if (response.isSuccessful()){
-                    assert response.body() != null;
-                    squaresDataList = (ArrayList<SquaresData>) response.body().getSquares();
+                    squaresDataList = (SquaresData[]) response.body().getSquares();
                 }
                 else{
                     internetFailure.show();
@@ -337,12 +336,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 LocationManager.GPS_PROVIDER, 2000, 5, locationListener);
         double deltaLatitude = 1.0 / 3600, deltaLongitude = 1.0 / 2400;//Дельта для формироваия квадратиков
         ArrayList<PolygonOptions> polygonOptions = new ArrayList<>();
-        for (int i = 0; i < squaresDataList.size(); i++) {
-            polygonOptions.add(polygonsCount, new PolygonOptions()
-                    .add(new LatLng(squaresDataList.get(i).getVertical_id() / 3600.0 + deltaLatitude, squaresDataList.get(i).getHorizontal_id() / 2400.0))
-                    .add(new LatLng(squaresDataList.get(i).getVertical_id() / 3600.0,squaresDataList.get(i).getHorizontal_id() / 2400.0))
-                    .add(new LatLng(squaresDataList.get(i).getVertical_id() / 3600.0, squaresDataList.get(i).getHorizontal_id() / 2400.0 + deltaLongitude))
-                    .add(new LatLng(squaresDataList.get(i).getVertical_id() / 3600.0 + deltaLatitude,squaresDataList.get(i).getHorizontal_id() / 2400.0 + deltaLongitude))
+        for (int i = 0; i < squaresDataList.length; i++) {
+            polygonOptions.add(new PolygonOptions()
+                    .add(new LatLng(squaresDataList[i].getVertical_id() / 3600.0 + deltaLatitude, squaresDataList[i].getHorizontal_id() / 2400.0))
+                    .add(new LatLng(squaresDataList[i].getVertical_id() / 3600.0,squaresDataList[i].getHorizontal_id() / 2400.0))
+                    .add(new LatLng(squaresDataList[i].getVertical_id() / 3600.0, squaresDataList[i].getHorizontal_id() / 2400.0 + deltaLongitude))
+                    .add(new LatLng(squaresDataList[i].getVertical_id() / 3600.0 + deltaLatitude,squaresDataList[i].getHorizontal_id() / 2400.0 + deltaLongitude))
                     .strokeColor(Color.argb(100, 0, 0, 0)).strokeWidth(2)
                     .fillColor(color));
             mMap.addPolygon(polygonOptions.get(polygonsCount));

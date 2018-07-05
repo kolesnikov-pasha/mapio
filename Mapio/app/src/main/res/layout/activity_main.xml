@@ -16,4 +16,5 @@
 
     <include layout="@layout/picked_color_view"
         android:id="@+id/picked_color_view"/>
+
 </RelativeLayout>

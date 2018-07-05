@@ -41,7 +41,7 @@ public class LoginActivity extends AppCompatActivity{
     private TextView mRegisterView;
 
     private void addUser(String uid){
-        new Requests().apiServices.sendUID(new User(uid)).enqueue(new Callback<Color>() {
+        Requests.apiServices.sendUID(new User(uid)).enqueue(new Callback<Color>() {
             @Override
             public void onResponse(Call<Color> call, Response<Color> response) {
                 if (response.isSuccessful()){
