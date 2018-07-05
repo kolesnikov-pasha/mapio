@@ -35,6 +35,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.android.gms.maps.model.MapStyleOptions;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -224,6 +225,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mMap = map;
         // Use a custom info window adapter to handle multiple lines of text in the
         // info window contents.
+
         mMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
             @Override
             // Return null here, so that getInfoContents() is called next.
@@ -246,6 +248,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 return infoWindow;
             }
         });
+        mMap.setBuildingsEnabled(true);
+        mMap.setMapStyle(new MapStyleOptions(getResources()
+                .getString(R.string.style_json)));
+
         // Prompt the user for permission.
         getLocationPermission();
 
@@ -323,6 +329,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
     private void init() {
+
         LocationManager locationManager = (LocationManager)
                 getSystemService(Context.LOCATION_SERVICE);
         LocationListener locationListener = new MyLocationListener();
