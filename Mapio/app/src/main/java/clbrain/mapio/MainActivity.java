@@ -352,8 +352,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     .add(new LatLng(squaresDataList.get(i).getVertical_id() / 3600.0, squaresDataList.get(i).getHorizontal_id() / 2400.0 + deltaLongitude))
                     .add(new LatLng(squaresDataList.get(i).getVertical_id() / 3600.0 + deltaLatitude,squaresDataList.get(i).getHorizontal_id() / 2400.0 + deltaLongitude))
                     .strokeColor(Color.argb(100, 0, 0, 0)).strokeWidth(2)
-                    .fillColor(color));
-            mMap.addMarker(new MarkerOptions().position(new LatLng(squaresDataList.get(i).getVertical_id() / 3600.0, squaresDataList.get(i).getHorizontal_id() / 2400.0)));
+                    .fillColor(Color.parseColor(squaresDataList.get(i).getColor())));
             mMap.addPolygon(polygonOptions.get(polygonsCount));
             polygonsCount++;
         }
