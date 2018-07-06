@@ -28,8 +28,8 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -67,6 +67,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     sendCoordinates();
                     getSquaresData();
                     init();
+                    getBounds();
                 }
             });
         }
@@ -95,6 +96,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     //For drawing polylines at the map
     SupportMapFragment mapFragment;
+    double latNorth,latSouth,longNorth,longSouth;
 
     private void sendCoordinates(){
         LocationManager locationManager = (LocationManager)
@@ -186,11 +188,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         internetFailure = Toast.makeText(getApplicationContext(), "Check your internet connection", Toast.LENGTH_SHORT);
         // Retrieve the content view that renders the map.
         setContentView(R.layout.activity_main);
-        // Construct a GeoDataClient
-        GeoDataClient mGeoDataClient = Places.getGeoDataClient(this, null);
 
-        // Construct a PlaceDetectionClient.
-        PlaceDetectionClient mPlaceDetectionClient = Places.getPlaceDetectionClient(this, null);
 
         // Construct a FusedLocationProviderClient.
         mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
@@ -249,6 +247,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 return infoWindow;
             }
         });
+
+
         mMap.setBuildingsEnabled(true);
         mMap.setMapStyle(new MapStyleOptions(getResources()
                 .getString(R.string.style_json)));
@@ -326,7 +326,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         updateLocationUI();
     }
 
-
+    private void getBounds(){
+        LatLngBounds bouds = mMap.getProjection().getVisibleRegion().latLngBounds;
+        LatLng boundsnorth  =  bouds.northeast;
+        LatLng boundssouth = bouds.southwest;
+        latNorth = boundsnorth.latitude;
+        longNorth = boundsnorth.longitude;
+        latSouth = boundssouth.latitude;
+        longSouth = boundssouth.longitude;
+    }
     private void init() {
 
         LocationManager locationManager = (LocationManager)
