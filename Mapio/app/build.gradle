@@ -6,7 +6,7 @@ android {
         applicationId "clbrain.mapio"
         minSdkVersion 15
         targetSdkVersion 28
-        versionCode 1
+        versionCode 3
         multiDexEnabled true
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"

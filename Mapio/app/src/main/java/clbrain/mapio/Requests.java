@@ -235,7 +235,7 @@ interface APIServices{
 
 public class Requests {
 
-    private static final String BASE_URL = "http:/10.79.10.64:8000/";
+    private static final String BASE_URL = "http://uni.vos.uz:8000/";
 
     private static final Retrofit retrofit = new Retrofit.Builder().baseUrl(BASE_URL)
             .addConverterFactory(GsonConverterFactory.create()).build();
