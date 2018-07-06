@@ -4,7 +4,6 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
 
 import retrofit2.Call;
@@ -16,7 +15,7 @@ import retrofit2.http.POST;
 import retrofit2.http.Query;
 
 class User{
-    String user_id;
+    private String user_id;
 
     public User(String user_id) {
         this.user_id = user_id;
@@ -35,7 +34,7 @@ class User{
 }
 
 class StringStatus{
-    String status;
+    private String status;
 
     public String getStatus() {
         return status;
@@ -55,7 +54,7 @@ class StringStatus{
 
 class SquaresDataList implements Serializable{
     @SerializedName("squares")
-    List<SquaresData> squares;
+    private List<SquaresData> squares;
 
     public List<SquaresData> getSquares() {
         return squares;
@@ -73,9 +72,9 @@ class SquaresDataList implements Serializable{
 }
 
 class SendCoordinates{
-    String user_id;
-    Double latitude;
-    Double longitude;
+    private String user_id;
+    private Double latitude;
+    private Double longitude;
 
     public SendCoordinates() {
     }
@@ -113,7 +112,7 @@ class SendCoordinates{
 
 class Color{
 
-    String user_color;
+    private String user_color;
 
     public Color() {
     }
@@ -199,7 +198,7 @@ class SquaresData{
 }
 
 class Score {
-    Integer user_score;
+    private Integer user_score;
 
     public Score(Integer user_score) {
         this.user_score = user_score;

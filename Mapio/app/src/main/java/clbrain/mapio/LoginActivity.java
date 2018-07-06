@@ -33,17 +33,15 @@ public class LoginActivity extends AppCompatActivity{
     //Firebase
     private FirebaseAuth mAuth = FirebaseAuth.getInstance();
     private FirebaseUser User = mAuth.getCurrentUser();
-    private FirebaseAuth.AuthStateListener mAuthListener;
 
     // UI references.
     private AutoCompleteTextView mEmailView;
     private EditText mPasswordView;
-    private TextView mRegisterView;
 
     private void addUser(String uid){
         Requests.apiServices.sendUID(new User(uid)).enqueue(new Callback<Color>() {
             @Override
-            public void onResponse(Call<Color> call, Response<Color> response) {
+            public void onResponse(@NonNull Call<Color> call, @NonNull Response<Color> response) {
                 if (response.isSuccessful()){
                     Log.i("COLOR", response.body().getUser_color());
                 }
@@ -53,7 +51,7 @@ public class LoginActivity extends AppCompatActivity{
             }
 
             @Override
-            public void onFailure(Call<Color> call, Throwable t) {
+            public void onFailure(@NonNull Call<Color> call, @NonNull Throwable t) {
                 Log.e("ADD_USER", "call failure");
             }
         });
@@ -64,11 +62,11 @@ public class LoginActivity extends AppCompatActivity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         // Set up the login form.
-        mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
-        mRegisterView = (TextView) findViewById(R.id.txt_register);
-        mPasswordView = (EditText) findViewById(R.id.password);
+        mEmailView = findViewById(R.id.email);
+        TextView mRegisterView = findViewById(R.id.txt_register);
+        mPasswordView = findViewById(R.id.password);
 
-        Button mEmailSignInButton = (Button) findViewById(R.id.email_sign_in_button);
+        Button mEmailSignInButton = findViewById(R.id.email_sign_in_button);
         mEmailSignInButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
