@@ -233,6 +233,7 @@ interface APIServices{
     Call<SquaresDataList> getSquaresData();
 }
 
+
 public class Requests {
 
     private static final String BASE_URL = "http://uni.vos.uz:8000/";
