@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.TreeSet;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -58,6 +59,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
 
     //for requests
+    TreeSet<SquaresData> allSquaresDataList = new TreeSet<>();
     class MyTimerTask extends TimerTask {
         @Override
         public void run() {
@@ -139,8 +141,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public void onResponse(@NonNull Call<SquaresDataList> call, @NonNull Response<SquaresDataList> response) {
                 if (response.isSuccessful()){
-                    Log.i("SQUARES", response.body().getSquares().toString() + " ");
-                    squaresDataList = (ArrayList<SquaresData>) response.body().getSquares();
+                    if (response.body() != null) {
+                        Log.i("SQUARES", response.body().getSquares().toString() + " ");
+                        ArrayList<SquaresData> squaresList = (ArrayList<SquaresData>) response.body().getSquares();
+
+                        squaresDataList = squaresList;
+                        allSquaresDataList.addAll(squaresList);
+                    }
                 }
                 else{
                     internetFailure.show();
@@ -264,11 +271,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     }
 
-    /**
+    /**uni.vos.uz:8000
      * Gets the current location of the device, and positions the map's camera.
      */
     private void getDeviceLocation() {
-        try {
+            try {
             if (mLocationPermissionGranted) {
                 Task<Location> locationResult = mFusedLocationProviderClient.getLastLocation();
                 locationResult.addOnCompleteListener(this, new OnCompleteListener<Location>() {
