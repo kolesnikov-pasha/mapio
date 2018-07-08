@@ -342,22 +342,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         longSouth = boundssouth.longitude;
     }
     private void init() {
-
-        LocationManager locationManager = (LocationManager)
-                getSystemService(Context.LOCATION_SERVICE);
-        LocationListener locationListener = new MyLocationListener();
-        if (ActivityCompat.checkSelfPermission(this,
-                android.Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(this,
-                android.Manifest.permission.ACCESS_COARSE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED)
-        {
-            return;
-        }
-        assert locationManager != null;
-        locationManager.requestLocationUpdates(
-                LocationManager.GPS_PROVIDER, 2000, 5, locationListener);
         double deltaLatitude = 1.0 / 3600, deltaLongitude = 1.0 / 2400;//Дельта для формироваия квадратиков
         for (int i = 0; i < squaresDataList.size(); i++) {
             polygonOptions.add(new PolygonOptions()
