@@ -30,6 +30,7 @@ import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -106,22 +107,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     double latNorth,latSouth,longNorth,longSouth;
 
     private void sendCoordinates(){
-        LocationManager locationManager = (LocationManager)
-                getSystemService(Context.LOCATION_SERVICE);
-        LocationListener locationListener = new MyLocationListener();
-        if (ActivityCompat.checkSelfPermission(this,
-                android.Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(this,
-                android.Manifest.permission.ACCESS_COARSE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED) {
-            return;
-        }
-        assert locationManager != null;
-        locationManager.requestLocationUpdates(
-                LocationManager.GPS_PROVIDER, 5000, 10, locationListener);
-        Double latitude = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER).getLatitude();
-        Double longitude = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER).getLongitude();
+        Double latitude = mMap.getMyLocation().getLatitude();
+        Double longitude = mMap.getMyLocation().getLongitude();
         Requests.apiServices.sendCoordinates(new SendCoordinates(user.getUid(), latitude, longitude)).enqueue(new Callback<StringStatus>() {
             @Override
             public void onResponse(@NonNull Call<StringStatus> call, @NonNull Response<StringStatus> response) {
@@ -240,6 +227,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void onMapReady(GoogleMap map) {
         mMap = map;
         mMap.clear();
+
         // Use a custom info window adapter to handle multiple lines of text in the
         // info window contents.
         mMap.setMinZoomPreference(18);
