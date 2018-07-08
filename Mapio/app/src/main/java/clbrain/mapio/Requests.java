@@ -1,5 +1,7 @@
 package clbrain.mapio;
 
+import android.support.annotation.NonNull;
+
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
@@ -157,7 +159,8 @@ class Scoreboard {
 
 }
 
-class SquaresData{
+class SquaresData implements Comparable{
+
 
     private Integer horizontal_id, vertical_id;
 
@@ -194,6 +197,16 @@ class SquaresData{
 
     public void setColor(String color) {
         this.color = color;
+    }
+
+    @Override
+    public String toString() {
+        return getVertical_id() + " " + getHorizontal_id() + " " + getColor();
+    }
+
+    @Override
+    public int compareTo(@NonNull Object o) {
+        return o.toString().compareTo(this.toString());
     }
 }
 
@@ -236,7 +249,7 @@ interface APIServices{
 
 public class Requests {
 
-    private static final String BASE_URL = "http://uni.vos.uz:8000/";
+    private static final String BASE_URL = "http://128.199.35.73:80/";
 
     private static final Retrofit retrofit = new Retrofit.Builder().baseUrl(BASE_URL)
             .addConverterFactory(GsonConverterFactory.create()).build();

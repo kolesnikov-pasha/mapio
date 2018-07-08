@@ -38,9 +38,11 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.android.gms.maps.model.MapStyleOptions;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.TreeMap;
 import java.util.TreeSet;
 
 import retrofit2.Call;
@@ -54,6 +56,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private int polygonsCount = 0;
     private int color;
     ArrayList<PolygonOptions> polygonOptions = new ArrayList<>();
+
+
 
     //firebase reference
     FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
@@ -97,6 +101,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private static final String KEY_LOCATION = "location";
 
     //For drawing polylines at the map
+    TreeMap<SquaresData, PolygonOptions> optionsTreeMap = new TreeMap<>();
     SupportMapFragment mapFragment;
     double latNorth,latSouth,longNorth,longSouth;
 
@@ -144,7 +149,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     if (response.body() != null) {
                         Log.i("SQUARES", response.body().getSquares().toString() + " ");
                         ArrayList<SquaresData> squaresList = (ArrayList<SquaresData>) response.body().getSquares();
-
+                        //for (int i = 0; i < squaresList.size(); i++) {
+                        //    if (allSquaresDataList.contains(squaresList.get(i))){
+                        //        squaresList.remove(squaresList.get(i));
+                        //        Log.e("tramp", "gei");
+                        //    }
+                        //}
                         squaresDataList = squaresList;
                         allSquaresDataList.addAll(squaresList);
                     }
@@ -229,6 +239,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onMapReady(GoogleMap map) {
         mMap = map;
+        mMap.clear();
         // Use a custom info window adapter to handle multiple lines of text in the
         // info window contents.
         mMap.setMinZoomPreference(18);
@@ -370,6 +381,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     .fillColor(Color.parseColor(squaresDataList.get(i).getColor())));
             mMap.addPolygon(polygonOptions.get(polygonsCount));
             polygonsCount++;
+
         }
     }
 
@@ -389,13 +401,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 mMap.setMyLocationEnabled(false);
                 mMap.getUiSettings().setMyLocationButtonEnabled(false);
                 mLastKnownLocation = null;
+
                 getLocationPermission();
             }
         } catch (SecurityException e)  {
             Log.e("Exception: %s", e.getMessage());
         }
     }
-
 
     @Override
     protected void onPause() {

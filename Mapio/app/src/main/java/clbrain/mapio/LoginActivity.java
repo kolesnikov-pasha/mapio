@@ -70,12 +70,18 @@ public class LoginActivity extends AppCompatActivity{
         mEmailSignInButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
+                if (mPasswordView.getText().toString().isEmpty() || mEmailView.getText().toString().isEmpty()) {
+                    Toast.makeText(getApplicationContext(), "Input your email and password", Toast.LENGTH_SHORT).show();
+                }
                 signing(mEmailView.getText().toString(), mPasswordView.getText().toString());
             }
         });
         mRegisterView.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
+                if (mPasswordView.getText().toString().isEmpty() || mEmailView.getText().toString().isEmpty()) {
+                    Toast.makeText(getApplicationContext(), "Input your email and password", Toast.LENGTH_SHORT).show();
+                }
                 register(mEmailView.getText().toString(), mPasswordView.getText().toString());
             }
         });
