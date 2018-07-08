@@ -186,8 +186,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         super.onCreate(savedInstanceState);
         // Retrieve location and camera position from saved instance state.
         if (savedInstanceState != null) {
-            mLastKnownLocation = savedInstanceState.getParcelable(KEY_LOCATION);
-            CameraPosition mCameraPosition = savedInstanceState.getParcelable(KEY_CAMERA_POSITION);
         }
         internetFailure = Toast.makeText(getApplicationContext(), "Check your internet connection", Toast.LENGTH_SHORT);
         // Retrieve the content view that renders the map.
@@ -226,8 +224,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onMapReady(GoogleMap map) {
         mMap = map;
-        mMap.clear();
-
         // Use a custom info window adapter to handle multiple lines of text in the
         // info window contents.
         mMap.setMinZoomPreference(18);
@@ -379,6 +375,19 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         } catch (SecurityException e)  {
             Log.e("Exception: %s", e.getMessage());
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        MyTimerTask timerTask = new MyTimerTask();
+        mTimer.schedule(timerTask, 2000, 5000);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        mTimer.cancel();
     }
 
     @Override
