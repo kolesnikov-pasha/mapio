@@ -107,8 +107,37 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     double latNorth,latSouth,longNorth,longSouth;
 
     private void sendCoordinates(){
-        Double latitude = mMap.getMyLocation().getLatitude();
-        Double longitude = mMap.getMyLocation().getLongitude();
+        Double latitude = 0.0, longitude = 0.0;
+        try {
+            latitude = mMap.getMyLocation().getLatitude();
+            longitude = mMap.getMyLocation().getLongitude();}
+        catch (Exception e){
+            try {
+                LocationManager locationManager = (LocationManager)
+                        getSystemService(Context.LOCATION_SERVICE);
+                LocationListener locationListener = new MyLocationListener();
+                if (ActivityCompat.checkSelfPermission(this,
+                        android.Manifest.permission.ACCESS_FINE_LOCATION)
+                        != PackageManager.PERMISSION_GRANTED
+                        && ActivityCompat.checkSelfPermission(this,
+                        android.Manifest.permission.ACCESS_COARSE_LOCATION)
+                        != PackageManager.PERMISSION_GRANTED) {
+                    return;
+                }
+                assert locationManager != null;
+                locationManager.requestLocationUpdates(
+                        LocationManager.GPS_PROVIDER, 200, 1, locationListener);
+                latitude = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER).getLatitude();
+                longitude = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER).getLongitude();
+                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 200, 1, locationListener);
+                latitude = (latitude + locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER).getLatitude()) / 2.0;
+                longitude = (longitude + locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER).getLongitude()) / 2.0;
+                locationManager.removeUpdates(locationListener);
+            }catch (Exception exp){
+                Toast.makeText(getApplicationContext(), "Oooops.. we have some problem", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), "Sorry!", Toast.LENGTH_SHORT).show();
+            }
+        }
         Requests.apiServices.sendCoordinates(new SendCoordinates(user.getUid(), latitude, longitude)).enqueue(new Callback<StringStatus>() {
             @Override
             public void onResponse(@NonNull Call<StringStatus> call, @NonNull Response<StringStatus> response) {
