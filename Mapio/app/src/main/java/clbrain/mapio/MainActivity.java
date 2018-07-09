@@ -65,7 +65,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     //for requests
     TreeSet<SquaresData> allSquaresDataList = new TreeSet<>();
-
     class MyTimerTask extends TimerTask {
         @Override
         public void run() {
@@ -73,13 +72,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 @Override
                 public void run() {
                     sendCoordinates();
-                    getSquaresData();
+                    getFrameData();
                     init();
                 }
             });
         }
     }
-
     private Timer mTimer;
     private Toast internetFailure = null;
     private List<SquaresData> squaresDataList = new ArrayList<>();
@@ -126,8 +124,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private void getFrameData() {
         FrameData bounds = getBounds();
-        Call<SquaresDataList> call = Requests.apiServices.getFrameData(bounds.getLeft_corner_latitude(),
-                bounds.getLeft_corner_longitude(), bounds.getRight_corner_latitude(), bounds.getRight_corner_longitude());
+        Call<SquaresDataList> call = Requests.apiServices.getFrameData(bounds.getLeft_bottom_corner_latitude(),
+                bounds.getLeft_bottom_corner_longitude(), bounds.getRight_top_corner_latitude(), bounds.getRight_top_corner_longitude());
         call.enqueue(new Callback<SquaresDataList>() {
             @Override
             public void onResponse(@NonNull Call<SquaresDataList> call, @NonNull Response<SquaresDataList> response) {
@@ -402,13 +400,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     private FrameData getBounds() {
         LatLngBounds bounds = mMap.getProjection().getVisibleRegion().latLngBounds;
-        LatLng boundsNorth = bounds.northeast;
-        LatLng boundsSouth = bounds.southwest;
-        latNorth = boundsNorth.latitude;
-        longNorth = boundsNorth.longitude;
-        latSouth = boundsSouth.latitude;
-        longSouth = boundsSouth.longitude;
-        return new FrameData(latNorth, longNorth, latSouth, longSouth);
+        LatLng boundsNorthEast = bounds.northeast;
+        LatLng boundsSouthWest = bounds.southwest;
+        return new FrameData(boundsSouthWest.latitude, boundsSouthWest.longitude,
+                boundsNorthEast.latitude, boundsNorthEast.longitude);
     }
 
     private void init() {
