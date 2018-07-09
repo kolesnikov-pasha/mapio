@@ -31,6 +31,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -59,12 +60,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     ArrayList<PolygonOptions> polygonOptions = new ArrayList<>();
 
 
-
     //firebase reference
     FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
 
     //for requests
     TreeSet<SquaresData> allSquaresDataList = new TreeSet<>();
+
     class MyTimerTask extends TimerTask {
         @Override
         public void run() {
@@ -72,12 +73,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 @Override
                 public void run() {
                     sendCoordinates();
-                    getFrameData();
+                    getSquaresData();
                     init();
                 }
             });
         }
     }
+
     private Timer mTimer;
     private Toast internetFailure = null;
     private List<SquaresData> squaresDataList = new ArrayList<>();
@@ -101,32 +103,51 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private static final String KEY_LOCATION = "location";
 
     //For drawing polylines at the map
-    TreeMap<SquaresData, PolygonOptions> optionsTreeMap = new TreeMap<>();
-    SupportMapFragment mapFragment;
-    double latNorth,latSouth,longNorth,longSouth;
+    class Coordinates implements Comparable<Coordinates>{
 
-    private void getFrameData(){
-        Call<SquaresDataList> call = Requests.apiServices.getFrameData(getBounds());
+        Integer vertical_id, horizontal_id;
+
+        public Coordinates(Integer vertical_id, Integer horizontal_id) {
+            this.vertical_id = vertical_id;
+            this.horizontal_id = horizontal_id;
+        }
+
+        public Coordinates(){}
+
+        @Override
+        public int compareTo(@NonNull Coordinates coordinates) {
+            return Math.abs(coordinates.horizontal_id - this.horizontal_id) + Math.abs(coordinates.vertical_id - this.vertical_id);
+        }
+    }
+
+    TreeMap<Coordinates, Polygon> optionsTreeMap = new TreeMap<>();
+    SupportMapFragment mapFragment;
+    double latNorth, latSouth, longNorth, longSouth;
+
+    private void getFrameData() {
+        FrameData bounds = getBounds();
+        Call<SquaresDataList> call = Requests.apiServices.getFrameData(bounds.getLeft_corner_latitude(),
+                bounds.getLeft_corner_longitude(), bounds.getRight_corner_latitude(), bounds.getRight_corner_longitude());
         call.enqueue(new Callback<SquaresDataList>() {
             @Override
             public void onResponse(@NonNull Call<SquaresDataList> call, @NonNull Response<SquaresDataList> response) {
                 if (response.isSuccessful()){
-                    if (response.body() != null) {
+                    if (response.body() != null){
                         Log.i("SQUARES", response.body().getSquares().toString() + " ");
                         ArrayList<SquaresData> squaresList = (ArrayList<SquaresData>) response.body().getSquares();
                         for (int i = 0; i < squaresList.size(); i++) {
-                            if (allSquaresDataList.contains(squaresList.get(i))){
+                            if (allSquaresDataList.contains(squaresList.get(i))) {
                                 squaresList.remove(squaresList.get(i));
                             }
                         }
                         squaresDataList = squaresList;
                         allSquaresDataList.addAll(squaresList);
                     }
-                }
-                else{
+                } else {
                     internetFailure.show();
                 }
             }
+
             @Override
             public void onFailure(@NonNull Call<SquaresDataList> call, @NonNull Throwable t) {
                 t.printStackTrace();
@@ -134,12 +155,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         });
     }
 
-    private void sendCoordinates(){
+    private void sendCoordinates() {
         Double latitude = 0.0, longitude = 0.0;
         try {
             latitude = mMap.getMyLocation().getLatitude();
-            longitude = mMap.getMyLocation().getLongitude();}
-        catch (Exception e){
+            longitude = mMap.getMyLocation().getLongitude();
+        } catch (Exception e) {
             try {
                 LocationManager locationManager = (LocationManager)
                         getSystemService(Context.LOCATION_SERVICE);
@@ -161,7 +182,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 latitude = (latitude + locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER).getLatitude()) / 2.0;
                 longitude = (longitude + locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER).getLongitude()) / 2.0;
                 locationManager.removeUpdates(locationListener);
-            }catch (Exception exp){
+            } catch (Exception exp) {
                 Toast.makeText(getApplicationContext(), "Oooops.. we have some problem", Toast.LENGTH_SHORT).show();
                 Toast.makeText(getApplicationContext(), "Sorry!", Toast.LENGTH_SHORT).show();
             }
@@ -171,8 +192,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             public void onResponse(@NonNull Call<StringStatus> call, @NonNull Response<StringStatus> response) {
                 if (response.isSuccessful()) {
                     Log.i("COORD_SEND", response.body().getStatus());
-                }
-                else {
+                } else {
                     internetFailure.show();
                 }
             }
@@ -184,28 +204,28 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         });
     }
 
-    private void getSquaresData(){
+    private void getSquaresData() {
         Call<SquaresDataList> call = Requests.apiServices.getSquaresData();
         call.enqueue(new Callback<SquaresDataList>() {
             @Override
             public void onResponse(@NonNull Call<SquaresDataList> call, @NonNull Response<SquaresDataList> response) {
-                if (response.isSuccessful()){
+                if (response.isSuccessful()) {
                     if (response.body() != null) {
                         Log.i("SQUARES", response.body().getSquares().toString() + " ");
                         ArrayList<SquaresData> squaresList = (ArrayList<SquaresData>) response.body().getSquares();
                         for (int i = 0; i < squaresList.size(); i++) {
-                            if (allSquaresDataList.contains(squaresList.get(i))){
+                            if (allSquaresDataList.contains(squaresList.get(i))) {
                                 squaresList.remove(squaresList.get(i));
                             }
                         }
                         squaresDataList = squaresList;
                         allSquaresDataList.addAll(squaresList);
                     }
-                }
-                else{
+                } else {
                     internetFailure.show();
                 }
             }
+
             @Override
             public void onFailure(@NonNull Call<SquaresDataList> call, @NonNull Throwable t) {
                 t.printStackTrace();
@@ -213,23 +233,23 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         });
     }
 
-    private void getUserColor(){
+    private void getUserColor() {
         String uid = user.getUid();
         Call<clbrain.mapio.Color> call = Requests.apiServices.getUserColor(uid);
         call.enqueue(new Callback<clbrain.mapio.Color>() {
             @Override
             public void onResponse(@NonNull Call<clbrain.mapio.Color> call,
                                    @NonNull Response<clbrain.mapio.Color> response) {
-                if (response.isSuccessful()){
+                if (response.isSuccessful()) {
                     assert response.body() != null;
                     color = Color.parseColor(response.body().getUser_color());
                     findViewById(R.id.picked_color_view).findViewById(R.id.color).setBackgroundColor(color);
-                    Log.e("COLOR",  color + "");
-                }
-                else{
+                    Log.e("COLOR", color + "");
+                } else {
                     internetFailure.show();
                 }
             }
+
             @Override
             public void onFailure(@NonNull Call<clbrain.mapio.Color> call, @NonNull Throwable t) {
                 t.printStackTrace();
@@ -240,9 +260,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Retrieve location and camera position from saved instance state.
-        if (savedInstanceState != null) {
-        }
         internetFailure = Toast.makeText(getApplicationContext(), "Check your internet connection", Toast.LENGTH_SHORT);
         // Retrieve the content view that renders the map.
         setContentView(R.layout.activity_main);
@@ -299,7 +316,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 TextView title = infoWindow.findViewById(R.id.title);
                 title.setText(marker.getTitle());
 
-                TextView snippet =  infoWindow.findViewById(R.id.snippet);
+                TextView snippet = infoWindow.findViewById(R.id.snippet);
                 snippet.setText(marker.getSnippet());
 
                 return infoWindow;
@@ -317,17 +334,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         updateLocationUI();
         // Get the current location of the device and set the position of the map.
         getDeviceLocation();
-        //Отрисовка
-        init();
 
     }
 
-    /**uni.vos.uz:8000
+    /**
+     * uni.vos.uz:8000
      * Gets the current location of the device, and positions the map's camera.
      */
 
     private void getDeviceLocation() {
-            try {
+        try {
             if (mLocationPermissionGranted) {
                 Task<Location> locationResult = mFusedLocationProviderClient.getLastLocation();
                 locationResult.addOnCompleteListener(this, new OnCompleteListener<Location>() {
@@ -384,9 +400,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         updateLocationUI();
     }
 
-    private FrameData getBounds(){
+    private FrameData getBounds() {
         LatLngBounds bounds = mMap.getProjection().getVisibleRegion().latLngBounds;
-        LatLng boundsNorth  =  bounds.northeast;
+        LatLng boundsNorth = bounds.northeast;
         LatLng boundsSouth = bounds.southwest;
         latNorth = boundsNorth.latitude;
         longNorth = boundsNorth.longitude;
@@ -398,16 +414,22 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private void init() {
         double deltaLatitude = 1.0 / 3600, deltaLongitude = 1.0 / 2400;//Дельта для формироваия квадратиков
         for (int i = 0; i < squaresDataList.size(); i++) {
-            polygonOptions.add(new PolygonOptions()
-                    .add(new LatLng(squaresDataList.get(i).getVertical_id() / 3600.0 + deltaLatitude, squaresDataList.get(i).getHorizontal_id() / 2400.0))
-                    .add(new LatLng(squaresDataList.get(i).getVertical_id() / 3600.0,squaresDataList.get(i).getHorizontal_id() / 2400.0))
-                    .add(new LatLng(squaresDataList.get(i).getVertical_id() / 3600.0, squaresDataList.get(i).getHorizontal_id() / 2400.0 + deltaLongitude))
-                    .add(new LatLng(squaresDataList.get(i).getVertical_id() / 3600.0 + deltaLatitude,squaresDataList.get(i).getHorizontal_id() / 2400.0 + deltaLongitude))
-                    .strokeColor(Color.argb(100, 0, 0, 0)).strokeWidth(2)
-                    .fillColor(Color.parseColor(squaresDataList.get(i).getColor())));
-            mMap.addPolygon(polygonOptions.get(polygonsCount));
-            polygonsCount++;
-
+            Coordinates coord = new Coordinates(squaresDataList.get(i).getVertical_id(), squaresDataList.get(i).getHorizontal_id());
+            if (!optionsTreeMap.containsKey(coord)) {
+                polygonOptions.add(new PolygonOptions()
+                        .add(new LatLng(squaresDataList.get(i).getVertical_id() / 3600.0 + deltaLatitude, squaresDataList.get(i).getHorizontal_id() / 2400.0))
+                        .add(new LatLng(squaresDataList.get(i).getVertical_id() / 3600.0, squaresDataList.get(i).getHorizontal_id() / 2400.0))
+                        .add(new LatLng(squaresDataList.get(i).getVertical_id() / 3600.0, squaresDataList.get(i).getHorizontal_id() / 2400.0 + deltaLongitude))
+                        .add(new LatLng(squaresDataList.get(i).getVertical_id() / 3600.0 + deltaLatitude, squaresDataList.get(i).getHorizontal_id() / 2400.0 + deltaLongitude))
+                        .strokeColor(Color.argb(100, 0, 0, 0)).strokeWidth(2)
+                        .fillColor(Color.parseColor(squaresDataList.get(i).getColor())));
+                optionsTreeMap.put(new Coordinates(squaresDataList.get(i).getVertical_id(),
+                                squaresDataList.get(i).getHorizontal_id()),
+                        mMap.addPolygon(polygonOptions.get(polygonsCount)));
+                polygonsCount++;
+            } else {
+                optionsTreeMap.get(coord).setFillColor(Color.parseColor(squaresDataList.get(i).getColor()));
+            }
         }
     }
 
@@ -430,7 +452,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                 getLocationPermission();
             }
-        } catch (SecurityException e)  {
+        } catch (SecurityException e) {
             Log.e("Exception: %s", e.getMessage());
         }
     }

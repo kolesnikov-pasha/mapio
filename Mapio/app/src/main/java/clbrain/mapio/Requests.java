@@ -299,7 +299,10 @@ interface APIServices{
     Call<SquaresDataList> getSquaresData();
 
     @GET("get_frame_data/")
-    Call<SquaresDataList> getFrameData(@Body FrameData frameData);
+    Call<SquaresDataList> getFrameData(@Query("bottom_left_latitude") Double bottomLeftLatitude,
+                                       @Query("bottom_left_longitude") Double bottomLeftLongitude,
+                                       @Query("top_right_latitude") Double topRightLatitude,
+                                       @Query("top_right_longitude") Double topRightLongitude);
 }
 
 public class Requests {
