@@ -19,18 +19,13 @@ import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.places.GeoDataClient;
-import com.google.android.gms.location.places.PlaceDetectionClient;
-import com.google.android.gms.location.places.Places;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
-import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -40,7 +35,6 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.android.gms.maps.model.MapStyleOptions;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -65,6 +59,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     //for requests
     TreeSet<SquaresData> allSquaresDataList = new TreeSet<>();
+
     class MyTimerTask extends TimerTask {
         @Override
         public void run() {
@@ -78,8 +73,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             });
         }
     }
+
     private Timer mTimer;
-    private Toast internetFailure = null;
+    private Toast internetFailure;
     private List<SquaresData> squaresDataList = new ArrayList<>();
 
     // The entry point to the Fused Location Provider.
@@ -88,7 +84,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     // A default location (Sydney, Australia) and default zoom to use when location permission is
     // not granted.
     private final LatLng mDefaultLocation = new LatLng(-33.8523341, 151.2106085);
-    private static final int DEFAULT_ZOOM = 15;
+    private static final int DEFAULT_ZOOM = 18;
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
     private boolean mLocationPermissionGranted;
 
@@ -101,16 +97,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private static final String KEY_LOCATION = "location";
 
     //For drawing polylines at the map
-    class Coordinates implements Comparable<Coordinates>{
+    class Coordinates implements Comparable<Coordinates> {
 
         Integer vertical_id, horizontal_id;
 
-        public Coordinates(Integer vertical_id, Integer horizontal_id) {
+        private Coordinates(Integer vertical_id, Integer horizontal_id) {
             this.vertical_id = vertical_id;
             this.horizontal_id = horizontal_id;
         }
 
-        public Coordinates(){}
+        private Coordinates() {
+        }
 
         @Override
         public int compareTo(@NonNull Coordinates coordinates) {
@@ -118,9 +115,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-    TreeMap<Coordinates, Polygon> optionsTreeMap = new TreeMap<>();
+    TreeMap<Coordinates, Polygon> polygonTreeMap = new TreeMap<>();
     SupportMapFragment mapFragment;
-    double latNorth, latSouth, longNorth, longSouth;
 
     private void getFrameData() {
         FrameData bounds = getBounds();
@@ -129,8 +125,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         call.enqueue(new Callback<SquaresDataList>() {
             @Override
             public void onResponse(@NonNull Call<SquaresDataList> call, @NonNull Response<SquaresDataList> response) {
-                if (response.isSuccessful()){
-                    if (response.body() != null){
+                if (response.isSuccessful()) {
+                    if (response.body() != null) {
                         Log.i("SQUARES", response.body().getSquares().toString() + " ");
                         ArrayList<SquaresData> squaresList = (ArrayList<SquaresData>) response.body().getSquares();
                         for (int i = 0; i < squaresList.size(); i++) {
@@ -189,9 +185,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public void onResponse(@NonNull Call<StringStatus> call, @NonNull Response<StringStatus> response) {
                 if (response.isSuccessful()) {
+                    assert response.body() != null;
                     Log.i("COORD_SEND", response.body().getStatus());
                 } else {
-                    internetFailure.show();
+                    Toast.makeText(getApplicationContext(), "Sending coordinates error...", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "Sorry!!!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "Leave your angry comment in GooglePlay:)", Toast.LENGTH_LONG).show();
                 }
             }
 
@@ -244,7 +243,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     findViewById(R.id.picked_color_view).findViewById(R.id.color).setBackgroundColor(color);
                     Log.e("COLOR", color + "");
                 } else {
-                    internetFailure.show();
+                    Toast.makeText(getApplicationContext(), "We can't get your color", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "Sorry!!!", Toast.LENGTH_SHORT).show();
                 }
             }
 
@@ -261,29 +261,25 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         internetFailure = Toast.makeText(getApplicationContext(), "Check your internet connection", Toast.LENGTH_SHORT);
         // Retrieve the content view that renders the map.
         setContentView(R.layout.activity_main);
-
-
         // Construct a FusedLocationProviderClient.
         mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
-
         // Build the map.
-        mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
+        mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         assert mapFragment != null;
         mapFragment.getMapAsync(this);
         // making requests
         getUserColor();
         mTimer = new Timer();
         MyTimerTask timerTask = new MyTimerTask();
-        mTimer.schedule(timerTask, 2000, 5000);
+        mTimer.schedule(timerTask, 200, 5000);
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         if (mMap != null) {
+            super.onSaveInstanceState(outState);
             outState.putParcelable(KEY_CAMERA_POSITION, mMap.getCameraPosition());
             outState.putParcelable(KEY_LOCATION, mLastKnownLocation);
-            super.onSaveInstanceState(outState);
         }
     }
 
@@ -301,7 +297,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
             @Override
             // Return null here, so that getInfoContents() is called next.
-            public View getInfoWindow(Marker arg0) {
+            public View getInfoWindow(Marker arg) {
                 return null;
             }
 
@@ -325,18 +321,16 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mMap.setBuildingsEnabled(true);
         mMap.setMapStyle(new MapStyleOptions(getResources()
                 .getString(R.string.style_json)));
-
         // Prompt the user for permission.
         getLocationPermission();
         // Turn on the My Location layer and the related control on the map.
         updateLocationUI();
         // Get the current location of the device and set the position of the map.
         getDeviceLocation();
-
     }
 
     /**
-     * uni.vos.uz:8000
+     * вы все геи тупые
      * Gets the current location of the device, and positions the map's camera.
      */
 
@@ -409,8 +403,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private void init() {
         double deltaLatitude = 1.0 / 3600, deltaLongitude = 1.0 / 2400;//Дельта для формироваия квадратиков
         for (int i = 0; i < squaresDataList.size(); i++) {
-            Coordinates coord = new Coordinates(squaresDataList.get(i).getVertical_id(), squaresDataList.get(i).getHorizontal_id());
-            if (!optionsTreeMap.containsKey(coord)) {
+            Coordinates coordinates = new Coordinates(squaresDataList.get(i).getVertical_id(), squaresDataList.get(i).getHorizontal_id());
+            if (!polygonTreeMap.containsKey(coordinates)) {
                 polygonOptions.add(new PolygonOptions()
                         .add(new LatLng(squaresDataList.get(i).getVertical_id() / 3600.0 + deltaLatitude, squaresDataList.get(i).getHorizontal_id() / 2400.0))
                         .add(new LatLng(squaresDataList.get(i).getVertical_id() / 3600.0, squaresDataList.get(i).getHorizontal_id() / 2400.0))
@@ -418,12 +412,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                         .add(new LatLng(squaresDataList.get(i).getVertical_id() / 3600.0 + deltaLatitude, squaresDataList.get(i).getHorizontal_id() / 2400.0 + deltaLongitude))
                         .strokeColor(Color.argb(100, 0, 0, 0)).strokeWidth(2)
                         .fillColor(Color.parseColor(squaresDataList.get(i).getColor())));
-                optionsTreeMap.put(new Coordinates(squaresDataList.get(i).getVertical_id(),
+                polygonTreeMap.put(new Coordinates(squaresDataList.get(i).getVertical_id(),
                                 squaresDataList.get(i).getHorizontal_id()),
                         mMap.addPolygon(polygonOptions.get(polygonsCount)));
                 polygonsCount++;
             } else {
-                optionsTreeMap.get(coord).setFillColor(Color.parseColor(squaresDataList.get(i).getColor()));
+                polygonTreeMap.get(coordinates).setFillColor(Color.parseColor(squaresDataList.get(i).getColor()));
             }
         }
     }
@@ -450,6 +444,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         } catch (SecurityException e) {
             Log.e("Exception: %s", e.getMessage());
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mTimer.schedule(new MyTimerTask(), 200, 5000);
     }
 
     @Override

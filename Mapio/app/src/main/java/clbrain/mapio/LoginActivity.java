@@ -27,7 +27,7 @@ import retrofit2.Response;
 /**
  * A login screen that offers login via email/password.
  */
-public class LoginActivity extends AppCompatActivity{
+public class LoginActivity extends AppCompatActivity {
 
     //Firebase
     private FirebaseAuth mAuth = FirebaseAuth.getInstance();
@@ -37,14 +37,13 @@ public class LoginActivity extends AppCompatActivity{
     private AutoCompleteTextView mEmailView;
     private EditText mPasswordView;
 
-    private void addUser(String uid){
+    private void addUser(String uid) {
         Requests.apiServices.sendUID(new User(uid)).enqueue(new Callback<Color>() {
             @Override
             public void onResponse(@NonNull Call<Color> call, @NonNull Response<Color> response) {
-                if (response.isSuccessful()){
+                if (response.isSuccessful()) {
                     Log.i("COLOR", response.body().getUser_color());
-                }
-                else{
+                } else {
                     Log.e("ADD_USER", "responce is not successful");
                 }
             }
@@ -73,43 +72,44 @@ public class LoginActivity extends AppCompatActivity{
         });
     }
 
-    private void signInOrSignUp(String email, String password){
+    private void signInOrSignUp(String email, String password) {
         if (email.isEmpty()) Toast.makeText(this, "Input your email", Toast.LENGTH_SHORT).show();
-        else if (password.isEmpty()) Toast.makeText(this, "Input your password", Toast.LENGTH_SHORT).show();
+        else if (password.isEmpty())
+            Toast.makeText(this, "Input your password", Toast.LENGTH_SHORT).show();
         else {
             register(email, password);
             signing(email, password);
         }
     }
 
-    private void signing(String email, String password){
+    private void signing(String email, String password) {
         mAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener(this,
                 new OnCompleteListener<AuthResult>() {
-                @Override
-                public void onComplete(@NonNull Task<AuthResult> task) {
-                    if (task.isSuccessful()){
-                        User = mAuth.getCurrentUser();
-                        Toast.makeText(LoginActivity.this, "Welcome!", Toast.LENGTH_SHORT).show();
-                        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                        startActivity(intent);
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (task.isSuccessful()) {
+                            User = mAuth.getCurrentUser();
+                            Toast.makeText(LoginActivity.this, "Welcome!", Toast.LENGTH_SHORT).show();
+                            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                            startActivity(intent);
+                        }
                     }
-                }
-            });
+                });
     }
 
-    private void register(String email, String password){
+    private void register(String email, String password) {
         mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(this,
                 new OnCompleteListener<AuthResult>() {
-                @Override
-                public void onComplete(@NonNull Task<AuthResult> task) {
-                    if ( task.isSuccessful()){
-                        FirebaseUser user = mAuth.getCurrentUser();
-                        assert user != null;
-                        addUser(user.getUid());
-                        Toast.makeText(LoginActivity.this, "Sign up is successful", Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        if (task.isSuccessful()) {
+                            FirebaseUser user = mAuth.getCurrentUser();
+                            assert user != null;
+                            addUser(user.getUid());
+                            Toast.makeText(LoginActivity.this, "Sign up is successful", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
     }
 }
 

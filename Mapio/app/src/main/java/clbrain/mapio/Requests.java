@@ -16,7 +16,7 @@ import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.Query;
 
-class User{
+class User {
     private String user_id;
 
     public User(String user_id) {
@@ -35,7 +35,7 @@ class User{
     }
 }
 
-class StringStatus{
+class StringStatus {
     private String status;
 
     public String getStatus() {
@@ -49,12 +49,13 @@ class StringStatus{
     public StringStatus(String status) {
         this.status = status;
     }
+
     public StringStatus() {
 
     }
 }
 
-class SquaresDataList implements Serializable{
+class SquaresDataList implements Serializable {
     @SerializedName("squares")
     private List<SquaresData> squares;
 
@@ -69,11 +70,12 @@ class SquaresDataList implements Serializable{
     public SquaresDataList(List<SquaresData> squares) {
         this.squares = squares;
     }
+
     public SquaresDataList() {
     }
 }
 
-class SendCoordinates{
+class SendCoordinates {
     private String user_id;
     private Double latitude;
     private Double longitude;
@@ -112,7 +114,7 @@ class SendCoordinates{
     }
 }
 
-class Color{
+class Color {
 
     private String user_color;
 
@@ -159,7 +161,7 @@ class Scoreboard {
 
 }
 
-class FrameData{
+class FrameData {
     private double left_bottom_corner_latitude, left_bottom_corner_longitude, right_top_corner_latitude, right_top_corner_longitude;
 
     public FrameData() {
@@ -205,7 +207,7 @@ class FrameData{
     }
 }
 
-class SquaresData implements Comparable{
+class SquaresData implements Comparable {
 
 
     private Integer horizontal_id, vertical_id;
@@ -275,7 +277,7 @@ class Score {
     }
 }
 
-interface APIServices{
+interface APIServices {
     @GET("get_user_score/")
     Call<Score> getUserScore(@Query("user_id") String uid);
 
@@ -306,5 +308,6 @@ public class Requests {
             .addConverterFactory(GsonConverterFactory.create()).build();
     public static final APIServices apiServices = retrofit.create(APIServices.class);
 
-    Requests() {}
+    Requests() {
+    }
 }
