@@ -72,9 +72,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 @Override
                 public void run() {
                     sendCoordinates();
-                    getSquaresData();
+                    getFrameData();
                     init();
-                    getBounds();
                 }
             });
         }
@@ -105,6 +104,35 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     TreeMap<SquaresData, PolygonOptions> optionsTreeMap = new TreeMap<>();
     SupportMapFragment mapFragment;
     double latNorth,latSouth,longNorth,longSouth;
+
+    private void getFrameData(){
+        Call<SquaresDataList> call = Requests.apiServices.getFrameData(getBounds());
+        call.enqueue(new Callback<SquaresDataList>() {
+            @Override
+            public void onResponse(@NonNull Call<SquaresDataList> call, @NonNull Response<SquaresDataList> response) {
+                if (response.isSuccessful()){
+                    if (response.body() != null) {
+                        Log.i("SQUARES", response.body().getSquares().toString() + " ");
+                        ArrayList<SquaresData> squaresList = (ArrayList<SquaresData>) response.body().getSquares();
+                        for (int i = 0; i < squaresList.size(); i++) {
+                            if (allSquaresDataList.contains(squaresList.get(i))){
+                                squaresList.remove(squaresList.get(i));
+                            }
+                        }
+                        squaresDataList = squaresList;
+                        allSquaresDataList.addAll(squaresList);
+                    }
+                }
+                else{
+                    internetFailure.show();
+                }
+            }
+            @Override
+            public void onFailure(@NonNull Call<SquaresDataList> call, @NonNull Throwable t) {
+                t.printStackTrace();
+            }
+        });
+    }
 
     private void sendCoordinates(){
         Double latitude = 0.0, longitude = 0.0;
@@ -297,6 +325,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     /**uni.vos.uz:8000
      * Gets the current location of the device, and positions the map's camera.
      */
+
     private void getDeviceLocation() {
             try {
             if (mLocationPermissionGranted) {
@@ -338,7 +367,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            @NonNull String permissions[],
@@ -356,15 +384,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         updateLocationUI();
     }
 
-    private void getBounds(){
-        LatLngBounds bouds = mMap.getProjection().getVisibleRegion().latLngBounds;
-        LatLng boundsnorth  =  bouds.northeast;
-        LatLng boundssouth = bouds.southwest;
-        latNorth = boundsnorth.latitude;
-        longNorth = boundsnorth.longitude;
-        latSouth = boundssouth.latitude;
-        longSouth = boundssouth.longitude;
+    private FrameData getBounds(){
+        LatLngBounds bounds = mMap.getProjection().getVisibleRegion().latLngBounds;
+        LatLng boundsNorth  =  bounds.northeast;
+        LatLng boundsSouth = bounds.southwest;
+        latNorth = boundsNorth.latitude;
+        longNorth = boundsNorth.longitude;
+        latSouth = boundsSouth.latitude;
+        longSouth = boundsSouth.longitude;
+        return new FrameData(latNorth, longNorth, latSouth, longSouth);
     }
+
     private void init() {
         double deltaLatitude = 1.0 / 3600, deltaLongitude = 1.0 / 2400;//Дельта для формироваия квадратиков
         for (int i = 0; i < squaresDataList.size(); i++) {
@@ -381,10 +411,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
-
     /**
      * Updates the map's UI settings based on whether the user has granted location permission.
      */
+
     private void updateLocationUI() {
         if (mMap == null) {
             return;

@@ -159,6 +159,59 @@ class Scoreboard {
 
 }
 
+class FrameData{
+    private double left_corner_latitude, left_corner_longitude, right_corner_latitude, right_corner_longitude;
+
+    public FrameData(double left_corner_latitude, double left_corner_longitude, double right_corner_latitude, double right_corner_longitude) {
+        this.left_corner_latitude = left_corner_latitude;
+        this.left_corner_longitude = left_corner_longitude;
+        this.right_corner_latitude = right_corner_latitude;
+        this.right_corner_longitude = right_corner_longitude;
+    }
+
+    public FrameData(double[] corners) {
+        this.left_corner_latitude = corners[0];
+        this.left_corner_longitude = corners[1];
+        this.right_corner_latitude = corners[2];
+        this.right_corner_longitude = corners[3];
+    }
+
+    public FrameData() {
+    }
+
+    public double getLeft_corner_latitude() {
+        return left_corner_latitude;
+    }
+
+    public void setLeft_corner_latitude(double left_corner_latitude) {
+        this.left_corner_latitude = left_corner_latitude;
+    }
+
+    public double getLeft_corner_longitude() {
+        return left_corner_longitude;
+    }
+
+    public void setLeft_corner_longitude(double left_corner_longitude) {
+        this.left_corner_longitude = left_corner_longitude;
+    }
+
+    public double getRight_corner_latitude() {
+        return right_corner_latitude;
+    }
+
+    public void setRight_corner_latitude(double right_corner_latitude) {
+        this.right_corner_latitude = right_corner_latitude;
+    }
+
+    public double getRight_corner_longitude() {
+        return right_corner_longitude;
+    }
+
+    public void setRight_corner_longitude(double right_corner_longitude) {
+        this.right_corner_longitude = right_corner_longitude;
+    }
+}
+
 class SquaresData implements Comparable{
 
 
@@ -244,8 +297,10 @@ interface APIServices{
 
     @GET("get_squares_data/")
     Call<SquaresDataList> getSquaresData();
-}
 
+    @GET("get_frame_data/")
+    Call<SquaresDataList> getFrameData(@Body FrameData frameData);
+}
 
 public class Requests {
 
