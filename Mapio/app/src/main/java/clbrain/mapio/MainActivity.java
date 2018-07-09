@@ -136,12 +136,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     if (response.body() != null) {
                         Log.i("SQUARES", response.body().getSquares().toString() + " ");
                         ArrayList<SquaresData> squaresList = (ArrayList<SquaresData>) response.body().getSquares();
-                        //for (int i = 0; i < squaresList.size(); i++) {
-                        //    if (allSquaresDataList.contains(squaresList.get(i))){
-                        //        squaresList.remove(squaresList.get(i));
-                        //        Log.e("tramp", "gei");
-                        //    }
-                        //}
+                        for (int i = 0; i < squaresList.size(); i++) {
+                            if (allSquaresDataList.contains(squaresList.get(i))){
+                                squaresList.remove(squaresList.get(i));
+                            }
+                        }
                         squaresDataList = squaresList;
                         allSquaresDataList.addAll(squaresList);
                     }
@@ -375,19 +374,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         } catch (SecurityException e)  {
             Log.e("Exception: %s", e.getMessage());
         }
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        MyTimerTask timerTask = new MyTimerTask();
-        mTimer.schedule(timerTask, 2000, 5000);
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        mTimer.cancel();
     }
 
     @Override

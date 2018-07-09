@@ -11,7 +11,6 @@ import android.view.View.OnClickListener;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -63,58 +62,51 @@ public class LoginActivity extends AppCompatActivity{
         setContentView(R.layout.activity_login);
         // Set up the login form.
         mEmailView = findViewById(R.id.email);
-        TextView mRegisterView = findViewById(R.id.txt_register);
         mPasswordView = findViewById(R.id.password);
 
         Button mEmailSignInButton = findViewById(R.id.email_sign_in_button);
         mEmailSignInButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (mPasswordView.getText().toString().isEmpty() || mEmailView.getText().toString().isEmpty()) {
-                    Toast.makeText(getApplicationContext(), "Input your email and password", Toast.LENGTH_SHORT).show();
-                }
-                signing(mEmailView.getText().toString(), mPasswordView.getText().toString());
-            }
-        });
-        mRegisterView.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (mPasswordView.getText().toString().isEmpty() || mEmailView.getText().toString().isEmpty()) {
-                    Toast.makeText(getApplicationContext(), "Input your email and password", Toast.LENGTH_SHORT).show();
-                }
-                register(mEmailView.getText().toString(), mPasswordView.getText().toString());
+                signInOrSignUp(mEmailView.getText().toString(), mPasswordView.getText().toString());
             }
         });
     }
-    protected void signing(String email, String password){
-        if (email.isEmpty()) Toast.makeText(this, "Email не введен", Toast.LENGTH_SHORT).show();
-        else if (password.isEmpty()) Toast.makeText(this, "Пароль не введен", Toast.LENGTH_SHORT).show();
-        else mAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+
+    private void signInOrSignUp(String email, String password){
+        if (email.isEmpty()) Toast.makeText(this, "Input your email", Toast.LENGTH_SHORT).show();
+        else if (password.isEmpty()) Toast.makeText(this, "Input your password", Toast.LENGTH_SHORT).show();
+        else {
+            register(email, password);
+            signing(email, password);
+        }
+    }
+
+    private void signing(String email, String password){
+        mAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener(this,
+                new OnCompleteListener<AuthResult>() {
                 @Override
                 public void onComplete(@NonNull Task<AuthResult> task) {
                     if (task.isSuccessful()){
                         User = mAuth.getCurrentUser();
-                        Toast.makeText(LoginActivity.this, "Добро пожаловать", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(LoginActivity.this, "Welcome!", Toast.LENGTH_SHORT).show();
                         Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                         startActivity(intent);
-                    }else{
-                        Toast.makeText(LoginActivity.this, "Ошибка входа", Toast.LENGTH_SHORT).show();
-                        mPasswordView.setText("");
                     }
                 }
             });
     }
 
     private void register(String email, String password){
-        mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-            @Override
-            public void onComplete(@NonNull Task<AuthResult> task) {
-                if ( task.isSuccessful()){
-                    FirebaseUser user = mAuth.getCurrentUser();
-                    assert user != null;
-                    addUser(user.getUid());
-                }else{
-                    Toast.makeText(LoginActivity.this, "К этой почте уже привязан аккаунт", Toast.LENGTH_LONG).show();
+        mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(this,
+                new OnCompleteListener<AuthResult>() {
+                @Override
+                public void onComplete(@NonNull Task<AuthResult> task) {
+                    if ( task.isSuccessful()){
+                        FirebaseUser user = mAuth.getCurrentUser();
+                        assert user != null;
+                        addUser(user.getUid());
+                        Toast.makeText(LoginActivity.this, "Sign up is successful", Toast.LENGTH_SHORT).show();
                 }
             }
         });
