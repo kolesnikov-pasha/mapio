@@ -18,13 +18,14 @@
         android:id="@+id/picked_color_view"/>
 
     <Button
+        android:id="@+id/drop_bomb"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:background="@drawable/button_drop_bomb"
         android:text="DROP BOMOB"
-        android:id="@+id/drop_bomb"
-        android:textAppearance="@style/TextAppearance.MaterialComponents.Chip" />
+        android:textAppearance="@style/TextAppearance.MaterialComponents.Chip"
+        android:visibility="invisible" />
 
 </RelativeLayout>
