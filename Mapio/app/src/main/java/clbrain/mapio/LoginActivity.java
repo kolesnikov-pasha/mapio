@@ -89,6 +89,8 @@ public class LoginActivity extends AppCompatActivity {
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
                             User = mAuth.getCurrentUser();
+                            assert User != null;
+                            addUser(User.getUid());
                             Toast.makeText(LoginActivity.this, "Welcome!", Toast.LENGTH_SHORT).show();
                             Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                             startActivity(intent);

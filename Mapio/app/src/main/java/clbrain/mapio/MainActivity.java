@@ -1,5 +1,6 @@
 package clbrain.mapio;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
@@ -7,19 +8,21 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.util.Pair;
 import android.view.View;
-import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationAvailability;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -28,9 +31,11 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polygon;
 import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -56,6 +61,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
     //for requests
     TreeSet<SquaresData> allSquaresDataList = new TreeSet<>();
+
     class MyTimerTask extends TimerTask {
         @Override
         public void run() {
@@ -63,7 +69,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 @Override
                 public void run() {
                     sendCoordinates();
-                    getSquaresData();
+                    getFrameData();
                     init();
                     Log.e("print map", polygonTreeMap.toString());
                 }
@@ -76,12 +82,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private List<SquaresData> squaresDataList = new ArrayList<>();
 
     // The entry point to the Fused Location Provider.
-    private FusedLocationProviderClient mFusedLocationProviderClient;
+    private FusedLocationProviderClient mFusedLocationClient;
 
     // A default location (Sydney, Australia) and default zoom to use when location permission is
     // not granted.
     private final LatLng mDefaultLocation = new LatLng(-33.8523341, 151.2106085);
-    private static final int DEFAULT_ZOOM = 18;
+    private static final int DEFAULT_ZOOM = 17;
     private static final int PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1;
     private boolean mLocationPermissionGranted;
 
@@ -156,92 +162,44 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
     }
-    /**
-     * ОТКРЫВАЮЩЕЕСЯ ПРЕДУПРЕЖДЕНИЕ О НЕРАБТАЮЩЕМ МЕТОДЕ
-     */
-    private void sendDropBomb(){
-        Double latitude = 0.0, longitude = 0.0;
-        try {
-            latitude = mMap.getMyLocation().getLatitude();
-            longitude = mMap.getMyLocation().getLongitude();
-        } catch (Exception e) {
-            try {
-                LocationManager locationManager = (LocationManager)
-                        getSystemService(Context.LOCATION_SERVICE);
-                LocationListener locationListener = new MyLocationListener();
-                if (ActivityCompat.checkSelfPermission(this,
-                        android.Manifest.permission.ACCESS_FINE_LOCATION)
-                        != PackageManager.PERMISSION_GRANTED
-                        && ActivityCompat.checkSelfPermission(this,
-                        android.Manifest.permission.ACCESS_COARSE_LOCATION)
-                        != PackageManager.PERMISSION_GRANTED) {
-                    return;
-                }
-                assert locationManager != null;
-                locationManager.requestLocationUpdates(
-                        LocationManager.GPS_PROVIDER, 200, 1, locationListener);
-                latitude = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER).getLatitude();
-                longitude = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER).getLongitude();
-                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 200, 1, locationListener);
-                latitude = (latitude + locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER).getLatitude()) / 2.0;
-                longitude = (longitude + locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER).getLongitude()) / 2.0;
-                locationManager.removeUpdates(locationListener);
-            } catch (Exception exp) {
-                Toast.makeText(getApplicationContext(), "Oooops.. we have some problem", Toast.LENGTH_SHORT).show();
-                Toast.makeText(getApplicationContext(), "Sorry!", Toast.LENGTH_SHORT).show();
-            }
-        }
-        Requests.apiServices.sendDropBomb(new SendCoordinates(user.getUid(), latitude, longitude)).enqueue(new Callback<StringStatus>() {
-            @Override
-            public void onResponse(@NonNull Call<StringStatus> call, @NonNull Response<StringStatus> response) {
-                if (response.isSuccessful()) {
-                } else {
-                    Toast.makeText(getApplicationContext(), "Sending coordinates error...", Toast.LENGTH_SHORT).show();
-                    Toast.makeText(getApplicationContext(), "Sorry!!!", Toast.LENGTH_SHORT).show();
-                    Toast.makeText(getApplicationContext(), "Leave your angry comment in GooglePlay:)", Toast.LENGTH_LONG).show();
-                }
-            }
 
-            @Override
-            public void onFailure(@NonNull Call<StringStatus> call, @NonNull Throwable t) {
-                internetFailure.show();
-            }
-        });
-    }
-
-    /**
-     * ЗАКРЫВАЮЩЕЕСЯ ПРЕДУПРЕЖДЕНИЕ О НЕРАБТАЮЩЕМ МЕТОДЕ
-     */
     private void sendCoordinates() {
         Double latitude = 0.0, longitude = 0.0;
         try {
-            latitude = mMap.getMyLocation().getLatitude();
-            longitude = mMap.getMyLocation().getLongitude();
+            SendCoordinates coordinates = getDeviceCoordinates();
+            latitude = coordinates.getLatitude();
+            longitude = coordinates.getLongitude();
+            Log.i("COORD", latitude + "; " + longitude);
         } catch (Exception e) {
             try {
-                LocationManager locationManager = (LocationManager)
-                        getSystemService(Context.LOCATION_SERVICE);
-                LocationListener locationListener = new MyLocationListener();
-                if (ActivityCompat.checkSelfPermission(this,
-                        android.Manifest.permission.ACCESS_FINE_LOCATION)
-                        != PackageManager.PERMISSION_GRANTED
-                        && ActivityCompat.checkSelfPermission(this,
-                        android.Manifest.permission.ACCESS_COARSE_LOCATION)
-                        != PackageManager.PERMISSION_GRANTED) {
-                    return;
+                latitude = mMap.getMyLocation().getLatitude();
+                longitude = mMap.getMyLocation().getLongitude();
+            } catch (Exception j) {
+                try {
+                    LocationManager locationManager = (LocationManager)
+                            getSystemService(Context.LOCATION_SERVICE);
+                    LocationListener locationListener = new MyLocationListener();
+                    if (ActivityCompat.checkSelfPermission(this,
+                            android.Manifest.permission.ACCESS_FINE_LOCATION)
+                            != PackageManager.PERMISSION_GRANTED
+                            && ActivityCompat.checkSelfPermission(this,
+                            android.Manifest.permission.ACCESS_COARSE_LOCATION)
+                            != PackageManager.PERMISSION_GRANTED) {
+                        return;
+                    }
+                    assert locationManager != null;
+                    locationManager.requestLocationUpdates(
+                            LocationManager.GPS_PROVIDER, 200, 1, locationListener);
+                    latitude = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER).getLatitude();
+                    longitude = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER).getLongitude();
+                    locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 200, 1, locationListener);
+                    latitude = (latitude + locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER).getLatitude()) / 2.0;
+                    longitude = (longitude + locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER).getLongitude()) / 2.0;
+                    locationManager.removeUpdates(locationListener);
+                } catch (Exception exp) {
+                    Toast.makeText(getApplicationContext(), "Oooops.. we have some problem", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "Sorry!", Toast.LENGTH_SHORT).show();
                 }
-                assert locationManager != null;
-                locationManager.requestLocationUpdates(
-                        LocationManager.GPS_PROVIDER, 200, 1, locationListener);
-                latitude = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER).getLatitude();
-                longitude = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER).getLongitude();
-                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 200, 1, locationListener);
-                latitude = (latitude + locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER).getLatitude()) / 2.0;
-                longitude = (longitude + locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER).getLongitude()) / 2.0;
-                locationManager.removeUpdates(locationListener);
-            } catch (Exception exp) {
-                Toast.makeText(getApplicationContext(), "Oooops.. we have some problem", Toast.LENGTH_SHORT).show();
-                Toast.makeText(getApplicationContext(), "Sorry!", Toast.LENGTH_SHORT).show();
             }
         }
         Requests.apiServices.sendCoordinates(new SendCoordinates(user.getUid(), latitude, longitude)).enqueue(new Callback<StringStatus>() {
@@ -323,7 +281,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         // Retrieve the content view that renders the map.
         setContentView(R.layout.activity_main);
         // Construct a FusedLocationProviderClient.
-        mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         // Build the map.
         mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         assert mapFragment != null;
@@ -333,13 +291,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mTimer = new Timer();
         MyTimerTask timerTask = new MyTimerTask();
         mTimer.schedule(timerTask, 200, 5000);
-        Button btn_drop_bomb = findViewById(R.id.drop_bomb);
-        btn_drop_bomb.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                    sendDropBomb();
-            }
-        });
+        startLocationUpdates();
     }
 
     @Override
@@ -398,14 +350,57 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     /**
-     * вы все геи тупые
      * Gets the current location of the device, and positions the map's camera.
      */
+    private LocationCallback mLocationCallback = new LocationCallback();
+    private LocationRequest mLocationRequest = new LocationRequest();
+
+    private void startLocationUpdates() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        mFusedLocationClient.requestLocationUpdates(mLocationRequest,
+                mLocationCallback, Looper.myLooper());
+    }
+
+    private SendCoordinates getDeviceCoordinates() {
+        final SendCoordinates[] ans = new SendCoordinates[1];
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission
+                (this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+        }
+        mFusedLocationClient.getLastLocation()
+                .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                    @Override
+                    public void onSuccess(Location location) {
+                        if (location != null) {
+                            Log.e("COORD", location.getLatitude() + "; " + location.getLongitude());
+                            ans[0] = new SendCoordinates(user.getUid(), location.getLatitude(), location.getLongitude());
+                        }
+                        else {
+                            Toast.makeText(getApplicationContext(),
+                                    "Turn on your GPS, please:)", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getApplicationContext(),
+                                    "Or leave angry comment in GoodlePlay:)", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+        return ans[0];
+    }
 
     private void getDeviceLocation() {
         try {
             if (mLocationPermissionGranted) {
-                Task<Location> locationResult = mFusedLocationProviderClient.getLastLocation();
+                Task<Location> locationResult = mFusedLocationClient.getLastLocation();
                 locationResult.addOnCompleteListener(this, new OnCompleteListener<Location>() {
                     @Override
                     public void onComplete(@NonNull Task<Location> task) {
