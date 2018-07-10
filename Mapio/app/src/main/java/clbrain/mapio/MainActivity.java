@@ -12,6 +12,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.util.Pair;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.TextView;
@@ -49,17 +50,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
     private GoogleMap mMap;
-    private int polygonsCount = 0;
     private int color;
-    ArrayList<PolygonOptions> polygonOptions = new ArrayList<>();
-
-
     //firebase reference
     FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-
     //for requests
     TreeSet<SquaresData> allSquaresDataList = new TreeSet<>();
-
     class MyTimerTask extends TimerTask {
         @Override
         public void run() {
@@ -67,8 +62,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 @Override
                 public void run() {
                     sendCoordinates();
-                    getFrameData();
+                    getSquaresData();
                     init();
+                    Log.e("print map", polygonTreeMap.toString());
                 }
             });
         }
@@ -99,6 +95,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     //For drawing polylines at the map
     class Coordinates implements Comparable<Coordinates> {
 
+        @Override
+        public String toString() {
+            return vertical_id + "; " + horizontal_id;
+        }
+
         Integer vertical_id, horizontal_id;
 
         private Coordinates(Integer vertical_id, Integer horizontal_id) {
@@ -111,7 +112,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         @Override
         public int compareTo(@NonNull Coordinates coordinates) {
-            return Math.abs(coordinates.horizontal_id - this.horizontal_id) + Math.abs(coordinates.vertical_id - this.vertical_id);
+            int h1 = coordinates.horizontal_id;
+            int v1 = coordinates.vertical_id;
+            int h2 = this.horizontal_id;
+            int v2 = this.vertical_id;
+            if (h1 == h2 && v1 == v2) return 0;
+            else if (h1 > h2 || (h1 == h2 && v1 > v2)) return 1;
+            else return -1;
         }
     }
 
@@ -185,8 +192,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             @Override
             public void onResponse(@NonNull Call<StringStatus> call, @NonNull Response<StringStatus> response) {
                 if (response.isSuccessful()) {
-                    assert response.body() != null;
-                    Log.i("COORD_SEND", response.body().getStatus());
                 } else {
                     Toast.makeText(getApplicationContext(), "Sending coordinates error...", Toast.LENGTH_SHORT).show();
                     Toast.makeText(getApplicationContext(), "Sorry!!!", Toast.LENGTH_SHORT).show();
@@ -293,7 +298,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mMap = map;
         // Use a custom info window adapter to handle multiple lines of text in the
         // info window contents.
-        mMap.setMinZoomPreference(18);
+        mMap.setMinZoomPreference(17);
         mMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
             @Override
             // Return null here, so that getInfoContents() is called next.
@@ -405,18 +410,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         for (int i = 0; i < squaresDataList.size(); i++) {
             Coordinates coordinates = new Coordinates(squaresDataList.get(i).getVertical_id(), squaresDataList.get(i).getHorizontal_id());
             if (!polygonTreeMap.containsKey(coordinates)) {
-                polygonOptions.add(new PolygonOptions()
-                        .add(new LatLng(squaresDataList.get(i).getVertical_id() / 3600.0 + deltaLatitude, squaresDataList.get(i).getHorizontal_id() / 2400.0))
-                        .add(new LatLng(squaresDataList.get(i).getVertical_id() / 3600.0, squaresDataList.get(i).getHorizontal_id() / 2400.0))
-                        .add(new LatLng(squaresDataList.get(i).getVertical_id() / 3600.0, squaresDataList.get(i).getHorizontal_id() / 2400.0 + deltaLongitude))
-                        .add(new LatLng(squaresDataList.get(i).getVertical_id() / 3600.0 + deltaLatitude, squaresDataList.get(i).getHorizontal_id() / 2400.0 + deltaLongitude))
+                polygonTreeMap.put(coordinates, null);
+                PolygonOptions polygonOptions = new PolygonOptions()
+                        .add(new LatLng(coordinates.vertical_id / 3600.0 + deltaLatitude, coordinates.horizontal_id / 2400.0))
+                        .add(new LatLng(coordinates.vertical_id / 3600.0, coordinates.horizontal_id / 2400.0))
+                        .add(new LatLng(coordinates.vertical_id / 3600.0, coordinates.horizontal_id / 2400.0 + deltaLongitude))
+                        .add(new LatLng(coordinates.vertical_id / 3600.0 + deltaLatitude, coordinates.horizontal_id / 2400.0 + deltaLongitude))
                         .strokeColor(Color.argb(100, 0, 0, 0)).strokeWidth(2)
-                        .fillColor(Color.parseColor(squaresDataList.get(i).getColor())));
-                polygonTreeMap.put(new Coordinates(squaresDataList.get(i).getVertical_id(),
-                                squaresDataList.get(i).getHorizontal_id()),
-                        mMap.addPolygon(polygonOptions.get(polygonsCount)));
-                polygonsCount++;
-            } else {
+                        .fillColor(Color.parseColor(squaresDataList.get(i).getColor()));
+                polygonTreeMap.put(coordinates, mMap.addPolygon(polygonOptions));
+
+            } else if (polygonTreeMap.get(coordinates).getFillColor() != Color.parseColor(squaresDataList.get(i).getColor())){
                 polygonTreeMap.get(coordinates).setFillColor(Color.parseColor(squaresDataList.get(i).getColor()));
             }
         }

@@ -207,7 +207,7 @@ class FrameData {
     }
 }
 
-class SquaresData implements Comparable {
+class SquaresData implements Comparable<SquaresData> {
 
 
     private Integer horizontal_id, vertical_id;
@@ -253,8 +253,8 @@ class SquaresData implements Comparable {
     }
 
     @Override
-    public int compareTo(@NonNull Object o) {
-        return o.toString().compareTo(this.toString());
+    public int compareTo(@NonNull SquaresData squaresData) {
+        return squaresData.toString().compareTo(this.toString());
     }
 }
 
