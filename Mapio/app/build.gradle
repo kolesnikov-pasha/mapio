@@ -6,9 +6,9 @@ android {
         applicationId "clbrain.mapio"
         minSdkVersion 15
         targetSdkVersion 28
-        versionCode 6
+        versionCode 7
         multiDexEnabled true
-        versionName "1.0"
+        versionName "1.4"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         resValue "string", "google_maps_key", (project.findProperty("GOOGLE_MAPS_API_KEY") ?: "")
     }

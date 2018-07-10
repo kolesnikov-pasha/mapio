@@ -14,6 +14,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.util.Pair;
 import android.view.View;
+import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -155,7 +156,62 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         });
     }
+    /**
+     * ОТКРЫВАЮЩЕЕСЯ ПРЕДУПРЕЖДЕНИЕ О НЕРАБТАЮЩЕМ МЕТОДЕ
+     */
+    private void sendDropBomb(){
+        Double latitude = 0.0, longitude = 0.0;
+        try {
+            latitude = mMap.getMyLocation().getLatitude();
+            longitude = mMap.getMyLocation().getLongitude();
+        } catch (Exception e) {
+            try {
+                LocationManager locationManager = (LocationManager)
+                        getSystemService(Context.LOCATION_SERVICE);
+                LocationListener locationListener = new MyLocationListener();
+                if (ActivityCompat.checkSelfPermission(this,
+                        android.Manifest.permission.ACCESS_FINE_LOCATION)
+                        != PackageManager.PERMISSION_GRANTED
+                        && ActivityCompat.checkSelfPermission(this,
+                        android.Manifest.permission.ACCESS_COARSE_LOCATION)
+                        != PackageManager.PERMISSION_GRANTED) {
+                    return;
+                }
+                assert locationManager != null;
+                locationManager.requestLocationUpdates(
+                        LocationManager.GPS_PROVIDER, 200, 1, locationListener);
+                latitude = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER).getLatitude();
+                longitude = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER).getLongitude();
+                locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 200, 1, locationListener);
+                latitude = (latitude + locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER).getLatitude()) / 2.0;
+                longitude = (longitude + locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER).getLongitude()) / 2.0;
+                locationManager.removeUpdates(locationListener);
+            } catch (Exception exp) {
+                Toast.makeText(getApplicationContext(), "Oooops.. we have some problem", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), "Sorry!", Toast.LENGTH_SHORT).show();
+            }
+        }
+        Requests.apiServices.sendDropBomb(new SendCoordinates(user.getUid(), latitude, longitude)).enqueue(new Callback<StringStatus>() {
+            @Override
+            public void onResponse(@NonNull Call<StringStatus> call, @NonNull Response<StringStatus> response) {
+                if (response.isSuccessful()) {
+                } else {
+                    Toast.makeText(getApplicationContext(), "Sending coordinates error...", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "Sorry!!!", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(), "Leave your angry comment in GooglePlay:)", Toast.LENGTH_LONG).show();
+                }
+            }
 
+            @Override
+            public void onFailure(@NonNull Call<StringStatus> call, @NonNull Throwable t) {
+                internetFailure.show();
+            }
+        });
+    }
+
+    /**
+     * ЗАКРЫВАЮЩЕЕСЯ ПРЕДУПРЕЖДЕНИЕ О НЕРАБТАЮЩЕМ МЕТОДЕ
+     */
     private void sendCoordinates() {
         Double latitude = 0.0, longitude = 0.0;
         try {
@@ -277,6 +333,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mTimer = new Timer();
         MyTimerTask timerTask = new MyTimerTask();
         mTimer.schedule(timerTask, 200, 5000);
+        Button btn_drop_bomb = findViewById(R.id.drop_bomb);
+        btn_drop_bomb.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                    sendDropBomb();
+            }
+        });
     }
 
     @Override

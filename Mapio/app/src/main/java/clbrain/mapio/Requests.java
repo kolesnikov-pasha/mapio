@@ -298,6 +298,8 @@ interface APIServices {
                                        @Query("bottom_left_longitude") Double bottomLeftLongitude,
                                        @Query("top_right_latitude") Double topRightLatitude,
                                        @Query("top_right_longitude") Double topRightLongitude);
+    @POST("drop_bomb/")
+    Call<StringStatus> sendDropBomb(@Body SendCoordinates sendCoordinates);
 }
 
 public class Requests {
