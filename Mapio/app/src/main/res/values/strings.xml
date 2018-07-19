@@ -285,4 +285,9 @@
   }
 ]
   </string>
+    <string name="to_go_to_the_game_activity">To go to the game activity</string>
+    <string name="to_go_to_the_shop">To go to the shop</string>
+    <string name="to_go_to_the_your_profile">To go to the your profile</string>
+    <string name="drop_bomb">drop bomb</string>
+    <string name="shop">Shop</string>
 </resources>

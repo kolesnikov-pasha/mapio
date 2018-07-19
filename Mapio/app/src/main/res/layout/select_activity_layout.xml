@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:padding="4dp"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <ImageButton
+        android:id="@+id/btn_main_activity"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="@drawable/outline_videogame_asset_black_48"
+        android:contentDescription="@string/to_go_to_the_game_activity" />
+
+    <ImageButton
+        android:id="@+id/btn_shop_activity"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_centerHorizontal="true"
+        android:background="@drawable/outline_shopping_cart_black_48"
+        android:contentDescription="@string/to_go_to_the_shop" />
+
+    <ImageButton
+        android:id="@+id/btn_profile_activity"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="@drawable/round"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:contentDescription="@string/to_go_to_the_your_profile" />
+
+</RelativeLayout>
