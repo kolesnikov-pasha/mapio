@@ -305,7 +305,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         getUserColor();
         TimerTask timerTask = new MyTimerTask();
         mTimer.schedule(timerTask, 200, 5000);
-        findViewById(R.drawable.round).setBackgroundColor(Color.RED);
+        try{
+            findViewById(R.drawable.round).setBackgroundColor(Color.RED);
+        }catch (Exception e){
+            Log.e("FUCK",e.getMessage());
+        }
     }
 
     @Override
